@@ -74,13 +74,13 @@ class SLIM_BPR_Cython(BaseSimilarityMatrixRecommender, Incremental_Training_Earl
 
 
 
-    def fit(self, epochs=300,
+    def fit(self, epochs=40,
             positive_threshold_BPR = None,
             train_with_sparse_weights = None,
             symmetric = True,
             verbose = False,
             random_seed = None,
-            batch_size = 1000, lambda_i = 0.0, lambda_j = 0.0, learning_rate = 1e-4, topK = 200,
+            batch_size = 10, lambda_i = 0.01, lambda_j = 0.001, learning_rate = 1e-4, topK = 300,
             sgd_mode='adagrad', gamma=0.995, beta_1=0.9, beta_2=0.999,
             **earlystopping_kwargs):
 

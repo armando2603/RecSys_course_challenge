@@ -27,13 +27,16 @@ tuning_params = dict()
 tuning_params = {
     "NN": (20, 600),
     "BA": (1, 10),
-    "EP": (20, 100),
-    "LE": (3, 6)
+    "EP": (20, 200),
+    "LE": (4, 7),
+    "L1": (0.001, 0.1),
+    "L2": (0.0001, 0.01)
  }
 
 
-def search_param(NN, BA, EP, LE):
-    recommender.fit(batch_size=int(BA), epochs=int(EP), topK=int(NN), learning_rate=float('1e-'+str(int(LE))))
+def search_param(NN, BA, EP, LE, L1, L2):
+    recommender.fit(batch_size=int(BA), epochs=int(EP), topK=int(NN), learning_rate=float('1e-'+str(int(LE))),
+                    lambda_i=L1, lambda_j=L2)
     res_valid = evaluate(urm_valid, recommender)
     return res_valid["MAP"]
 
@@ -42,16 +45,16 @@ optimizer = BayesianOptimization(
     f=search_param,
     pbounds=tuning_params,
     verbose=3,
-    random_state=2,
+    random_state=5,
 )
 
 logger = JSONLogger(path="./logs.json")
 optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
-
+#load_logs(optimizer, logs=["./logs.json"])
 
 optimizer.maximize(
-    init_points=1,
-    n_iter=1,
+    init_points=10,
+    n_iter=30,
 )
 
 print(optimizer.max)

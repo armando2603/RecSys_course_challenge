@@ -10,14 +10,13 @@ import pandas as pd
 import numpy as np
 import scipy.sparse as sps
 from tqdm import tqdm
+import time
 from DataManager.split_train_validation_leave_k_out import split_train_leave_k_out_user_wise
 
 
-
 def MAP(is_relevant, relevant_items):
-
+    cdef double map_score
     #is_relevant = np.in1d(recommended_items, relevant_items, assume_unique=True)
-
     # Cumulative sum: precision at 1, at 2, at 3 ...
     p_at_k = is_relevant * np.cumsum(is_relevant, dtype=np.float32) / (1 + np.arange(is_relevant.shape[0]))
 
@@ -32,9 +31,9 @@ def evaluate(URM_test, recommender_object, at=10):
 
     cumulative_precision = 0.0
     cumulative_recall = 0.0
-    cumulative_MAP = 0.0
+    cdef double cumulative_MAP = 0.0
 
-    num_eval = 0
+    cdef int num_eval = 0
 
     URM_test = sps.csr_matrix(URM_test)
 
@@ -47,7 +46,6 @@ def evaluate(URM_test, recommender_object, at=10):
     grouped_urm_df = urm_test_df.groupby('row', as_index=True).apply(lambda x: list(x['col']))
 
     for user_id in tqdm(users):
-
         relevant_items = np.array(grouped_urm_df[user_id])
 
         recommended_items = recommender_object.recommend(user_id, at)
@@ -60,9 +58,7 @@ def evaluate(URM_test, recommender_object, at=10):
         if len(is_relevant) == 0:
             is_relevant = [False for i in range(10)]
             is_relevant = np.array(is_relevant)
-
         cumulative_MAP += MAP(is_relevant, relevant_items)
-
     cumulative_MAP /= num_eval
 
     print("Recommender performance is: MAP = {:.4f}".format(cumulative_MAP))

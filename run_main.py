@@ -19,7 +19,7 @@ import pandas as pd
 Data = DataManager()
 
 MyRecommender = ItemKNNCFRecommender(Data.get_urm())
-MyRecommender.fit(topK=15, shrink=30)
+MyRecommender.fit(topK=20, shrink=103)
 users = Data.get_target_users()
 SecondRecommender = UserKNNCFRecommender(Data.get_urm())
 SecondRecommender.fit(topK=150, shrink=10)
@@ -28,8 +28,8 @@ SecondRecommender.fit(topK=150, shrink=10)
 recommended_list = []
 for user in tqdm(users):
     recommended_items = MyRecommender.recommend(user, 10)
-    if len(recommended_items) == 0:
-        recommended_items = SecondRecommender.recommend(user, 10)
+    #if len(recommended_items) == 0:
+    #    recommended_items = SecondRecommender.recommend(user, 10)
     items_strings = ' '.join([str(i) for i in recommended_items])
     recommended_list.append(items_strings)
 

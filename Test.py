@@ -21,7 +21,7 @@ Data = DataManager()
 #urm_train, urm_test = train_test_holdout(Data.get_urm())
 urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
 MyRecommender = SLIM_BPR_Cython(urm_train)
-MyRecommender.fit()
+MyRecommender.fit(topK=20, epochs=10)
 #MyRecommender.fit(topK=50, shrink=10, normalize=True)
 evaluate(urm_test, MyRecommender)
 

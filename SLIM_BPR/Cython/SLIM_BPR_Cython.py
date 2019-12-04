@@ -79,7 +79,7 @@ class SLIM_BPR_Cython(BaseSimilarityMatrixRecommender, Incremental_Training_Earl
             train_with_sparse_weights = False,
             symmetric = True,
             verbose = False,
-            random_seed = False,
+            random_seed = True,
             batch_size = 10, lambda_i = 0.01, lambda_j = 0.001, learning_rate = 1e-3, topK = 300,
             sgd_mode='adagrad', gamma=0.995, beta_1=0.9, beta_2=0.999,
             **earlystopping_kwargs):

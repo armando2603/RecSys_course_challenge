@@ -48,9 +48,12 @@ optimizer = BayesianOptimization(
     random_state=5,
 )
 
+load_logs(optimizer, logs=["./logs.json"])
+
+
 logger = JSONLogger(path="./logs.json")
 optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
-#load_logs(optimizer, logs=["./logs.json"])
+
 
 optimizer.maximize(
     init_points=10,

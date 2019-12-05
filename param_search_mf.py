@@ -7,7 +7,7 @@ from DataManager.DataManager import DataManager
 from SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from DataManager.split_train_validation_leave_k_out import split_train_leave_k_out_user_wise
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_BPR_Cython, MatrixFactorization_FunkSVD_Cython, MatrixFactorization_AsySVD_Cython
-
+from MatrixFactorization.IALSRecommender import IALSRecommender
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from Evaluator.evaluation import evaluate
 from bayes_opt import BayesianOptimization
@@ -23,19 +23,20 @@ urm_temp, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(),
 
 urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_temp,
                                                                         use_validation_set=False, leave_random_out=True)
-recommender = MatrixFactorization_BPR_Cython(urm_train)
+recommender = IALSRecommender(urm_train)
 
 tuning_params = dict()
 tuning_params = {
     "NF": (10, 100),
-    "BA": (1, 50),
-    "EP": (20, 200),
-    "LE": (0.0000001, 0.01),
+    "A": (5, 0.001),
+    "EP": (5, 20),
+    "E": (10, 1),
+    "RE": (0.000001, 0.01)
  }
 
 
-def search_param(NF, BA, EP, LE):
-    recommender.fit(batch_size=int(BA), epochs=int(EP), num_factors=int(NF), learning_rate=LE)
+def search_param(NF, A, EP, E, RE):
+    recommender.fit(alpha=A, epochs=int(EP), num_factors=int(NF), epsilon=E, reg=RE)
     res_valid = evaluate(urm_valid, recommender)
     evaluate(urm_test, recommender)
     return res_valid["MAP"]
@@ -44,15 +45,15 @@ def search_param(NF, BA, EP, LE):
 optimizer = BayesianOptimization(
     f=search_param,
     pbounds=tuning_params,
-    verbose=3,
+    verbose=1,
     random_state=5,
 )
 
 #load_logs(optimizer, logs=["./logs.json"])
 
 
-logger = JSONLogger(path="./logsMF.json")
-optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
+# logger = JSONLogger(path="./logsMF.json")
+# optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
 # optimizer.probe(
 #     params={"NN": 21,

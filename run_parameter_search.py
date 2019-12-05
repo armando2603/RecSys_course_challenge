@@ -7,8 +7,9 @@ from DataManager.DataManager import DataManager
 from SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from DataManager.split_train_validation_leave_k_out import split_train_leave_k_out_user_wise
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_BPR_Cython, MatrixFactorization_FunkSVD_Cython, MatrixFactorization_AsySVD_Cython
-
+from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
+from KNN.ItemKNNCBFRecommender import ItemKNNCBFRecommender
 from Evaluator.evaluation import evaluate
 from bayes_opt import BayesianOptimization
 from bayes_opt.observer import JSONLogger
@@ -24,22 +25,21 @@ urm_temp, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(),
 urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_temp,
                                                                         use_validation_set=False, leave_random_out=True)
 
+recommender = UserKNNCFRecommender(urm_train)
 
 tuning_params = dict()
 tuning_params = {
-    "NF": (10, 100),
-    "BA": (1, 50),
-    "EP": (20, 600),
-    "LE": (0.0000001, 0.01),
+    "TK": (120, 250),
+    "SH": (1, 20),
  }
 
 
 
 
-def search_param(NF, BA, EP, LE, L1, L2):
-    recommender.fit(batch_size=int(BA), epochs=int(EP), num_factors=int(NF), learning_rate=LE)
+def search_param(TK, SH):
+    recommender.fit(topK=TK, shrink=SH)
     res_valid = evaluate(urm_valid, recommender)
-    evaluate(urm_test, recommender)
+    #evaluate(urm_test, recommender)
     return res_valid["MAP"]
 
 
@@ -53,7 +53,7 @@ optimizer = BayesianOptimization(
 #load_logs(optimizer, logs=["./logs.json"])
 
 
-logger = JSONLogger(path="./logsMF.json")
+logger = JSONLogger(path="./logsUserCF.json")
 optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
 # optimizer.probe(

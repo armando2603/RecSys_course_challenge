@@ -82,7 +82,7 @@ def read_data_split_and_search():
         # PureSVDRecommender,
         # SLIM_BPR_Cython,
         # SLIMElasticNetRecommender
-        IALSRecommender
+        SLIMElasticNetRecommender
     ]
 
 
@@ -90,8 +90,8 @@ def read_data_split_and_search():
 
     from Base.Evaluation.Evaluator import EvaluatorHoldout
 
-    evaluator_validation = EvaluatorHoldout(urm_valid, cutoff_list=[5])
-    evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[5, 10])
+    evaluator_validation = EvaluatorHoldout(urm_valid, cutoff_list=[10])
+    evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
 
     runParameterSearch_Collaborative_partial = partial(runParameterSearch_Collaborative,
@@ -109,8 +109,8 @@ def read_data_split_and_search():
 
 
 
-    pool = multiprocessing.Pool(processes=int(multiprocessing.cpu_count()), maxtasksperchild=1)
-    pool.map(runParameterSearch_Collaborative_partial, collaborative_algorithm_list)
+    # pool = multiprocessing.Pool(processes=int(multiprocessing.cpu_count()), maxtasksperchild=1)
+    # pool.map(runParameterSearch_Collaborative_partial, collaborative_algorithm_list)
 
 
 

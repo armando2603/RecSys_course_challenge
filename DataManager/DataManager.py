@@ -8,25 +8,28 @@ import scipy.sparse as sps
 import pandas as pd
 import sklearn as sk
 from sklearn import feature_extraction
+from pathlib import Path
 
 """
 This class is used to create dataframes from the data
 We create 3 matrices:
-    - 
+    - URM: User Rating Matrix
     - ICM: Item Content Matrix
     - UCM: User Content Matrix
 """
+
+data_folder = Path("Data/")
 
 
 class DataManager(object):
 
     def __init__(self):
 
-        self.train = pd.read_csv('Data/data_train.csv')
+        self.train = pd.read_csv(data_folder / 'data_train.csv')
         #self.items = pd.read_csv('Data/items.csv')
 
     def get_target_users(self):
-        sample_df = pd.read_csv('Data/alg_sample_submission.csv')
+        sample_df = pd.read_csv(data_folder / 'alg_sample_submission.csv')
         target_users = sample_df['user_id']
         return target_users
 

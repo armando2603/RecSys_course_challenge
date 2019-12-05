@@ -19,7 +19,7 @@ from Evaluator.evaluation import evaluate
 from DataManager.split_train_validation_leave_k_out import split_train_leave_k_out_user_wise
 from pathlib import Path
 
-data_folder = Path("Data/")
+data_folder = Path(__file__).parent.absolute()
 
 test = True
 
@@ -31,7 +31,7 @@ if test:
 else:
     urm_train = Data.get_urm()
 
-MyRecommender = IALSRecommender(urm_train)
+MyRecommender = UserKNNCFRecommender(urm_train)
 MyRecommender.fit(topK=20, shrink=30)
 
 # SecondRecommender = UserKNNCFRecommender(urm_train)

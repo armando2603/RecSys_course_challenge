@@ -9,6 +9,8 @@ import pandas as pd
 import sklearn as sk
 from sklearn import feature_extraction
 from pathlib import Path
+from sklearn.preprocessing import MultiLabelBinarizer, normalize
+from pathlib import Path
 
 """
 This class is used to create dataframes from the data
@@ -18,18 +20,18 @@ We create 3 matrices:
     - UCM: User Content Matrix
 """
 
-data_folder = Path("Data/")
+data_folder = Path(__file__).parent.parent.absolute()
 
 
 class DataManager(object):
 
     def __init__(self):
 
-        self.train = pd.read_csv(data_folder / 'data_train.csv')
+        self.train = pd.read_csv(data_folder / 'Data/data_train.csv')
         #self.items = pd.read_csv('Data/items.csv')
 
     def get_target_users(self):
-        sample_df = pd.read_csv(data_folder / 'alg_sample_submission.csv')
+        sample_df = pd.read_csv(data_folder / 'Data/alg_sample_submission.csv')
         target_users = sample_df['user_id']
         return target_users
 
@@ -63,47 +65,28 @@ class DataManager(object):
         ucm_tfidf = ucm_tfidf.T
         return ucm_tfidf
 
-    '''def get_icm(self):
+    def get_icm(self):
         print('Building ICM from items...')
 
-        # 1 - Artists
+        # 1 - Price
 
-        # In this case data is order by artist
-        #artist_df = self.items.reindex(columns=[['track_id'], ['artist_id']])
-        #artist_df.sort_values(by='track_id', inplace=True)
+        item_data = pd.read_csv(data_folder / "data_ICM_price.csv")
+        price = item_data.reindex(columns=['row', 'data'])  # sto trattando i prezzi degli item
+        price.sort_values(by='row', inplace=True)  # this seems not useful, values are already ordered
+        price_list = [[a] for a in price['data']]
+        icm_price = MultiLabelBinarizer(sparse_output=True).fit_transform(price_list)
+        icm_price_csr = icm_price.tocsr()
 
-        artists = self.items['artist_id']
-        items = self.items['track_id']
-        ones = np.ones(len(items))
-        urm_shape = self.get_urm().shape
+        # 2 - Asset
 
-        icm_artist = sps.coo_matrix((ones, (items, artists)), shape=urm_shape)
-        icm_artist_csr = icm_artist.tocsr()
+        item_data = pd.read_csv(data_folder / "data_ICM_asset.csv")
+        asset = item_data.reindex(columns=['row', 'data'])  # sto trattando i prezzi degli item
+        asset.sort_values(by='row', inplace=True)  # this seems not useful, values are already ordered
+        asset_list = [[a] for a in asset['data']]
+        icm_asset = MultiLabelBinarizer(sparse_output=True).fit_transform(asset_list)
+        icm_asset_csr = icm_asset.tocsr()
 
-        # 2 - Albums
-
-        albums = self.items['album_id']
-        items = self.items['track_id']
-        ones = np.ones(len(items))
-        urm_shape = self.get_urm().shape
-
-        icm_albums = sps.coo_matrix((ones, (items, albums)), shape=urm_shape)
-        icm_albums_csr = icm_albums.tocsr()
-
-        # 3 - Duration
-
-        duration = self.items['duration_sec']
-        items = self.items['track_id']
-        ones = np.ones(len(items))
-        urm_shape = self.get_urm().shape
-
-        icm_duration = sps.coo_matrix((ones, (items, duration)), shape=urm_shape)
-        icm_duration_csr = icm_albums.tocsr()
-
-        # 4 stack together
-
-        icm = sps.hstack((icm_artist_csr, icm_albums_csr, icm_duration_csr))
+        icm = sps.hstack((icm_price_csr, icm_asset_csr))
         return icm.tocsr()
 
-    '''
 

@@ -23,7 +23,7 @@ urm_temp, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(),
 
 urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_temp,
                                                                         use_validation_set=False, leave_random_out=True)
-recommender = MatrixFactorization_BPR_Cython(urm_train)
+
 
 tuning_params = dict()
 tuning_params = {

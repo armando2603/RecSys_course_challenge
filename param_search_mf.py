@@ -29,14 +29,13 @@ tuning_params = dict()
 tuning_params = {
     "NF": (10, 100),
     "A": (5, 0.001),
-    "EP": (5, 20),
     "E": (10, 1),
     "RE": (0.000001, 0.01)
  }
 
 
 def search_param(NF, A, EP, E, RE):
-    recommender.fit(alpha=A, epochs=int(EP), num_factors=int(NF), epsilon=E, reg=RE)
+    recommender.fit(alpha=A, epochs=3, num_factors=int(NF), epsilon=E, reg=RE)
     res_valid = evaluate(urm_valid, recommender)
     evaluate(urm_test, recommender)
     return res_valid["MAP"]

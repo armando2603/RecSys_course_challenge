@@ -27,15 +27,14 @@ recommender = IALSRecommender(urm_train)
 
 tuning_params = dict()
 tuning_params = {
-    "NF": (10, 100),
-    "A": (5, 0.001),
-    "E": (10, 1),
-    "RE": (0.000001, 0.01)
+    "NF": (100, 300),
+    "A": (1, 0.001),
+    "RE": (0.001, 0.5)
  }
 
 
-def search_param(NF, A, EP, E, RE):
-    recommender.fit(alpha=A, epochs=3, num_factors=int(NF), epsilon=E, reg=RE)
+def search_param(NF, A, RE):
+    recommender.fit(alpha=A, epochs=3, num_factors=int(NF), reg=RE)
     res_valid = evaluate(urm_valid, recommender)
     evaluate(urm_test, recommender)
     return res_valid["MAP"]
@@ -51,8 +50,8 @@ optimizer = BayesianOptimization(
 #load_logs(optimizer, logs=["./logs.json"])
 
 
-# logger = JSONLogger(path="./logsMF.json")
-# optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
+logger = JSONLogger(path="./logsIALS.json")
+optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
 # optimizer.probe(
 #     params={"NN": 21,

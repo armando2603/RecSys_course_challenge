@@ -41,7 +41,7 @@ class _MatrixFactorization_Cython(BaseMatrixFactorizationRecommender, Incrementa
             negative_interactions_quota = 0.0,
             init_mean = 0.0, init_std_dev = 0.1,
             user_reg = 0.0, item_reg = 0.0, bias_reg = 0.0, positive_reg = 0.0, negative_reg = 0.0,
-            verbose = False, random_seed = None,
+            verbose = False, random_seed = True,
             **earlystopping_kwargs):
 
 

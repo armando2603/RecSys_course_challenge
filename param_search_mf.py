@@ -29,14 +29,12 @@ tuning_params = dict()
 tuning_params = {
     "NF": (10, 100),
     "BA": (1, 50),
-    "EP": (20, 600),
+    "EP": (20, 200),
     "LE": (0.0000001, 0.01),
  }
 
 
-
-
-def search_param(NF, BA, EP, LE, L1, L2):
+def search_param(NF, BA, EP, LE):
     recommender.fit(batch_size=int(BA), epochs=int(EP), num_factors=int(NF), learning_rate=LE)
     res_valid = evaluate(urm_valid, recommender)
     evaluate(urm_test, recommender)
@@ -69,7 +67,7 @@ optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
 optimizer.maximize(
     init_points=15,
-    n_iter=40,
+    n_iter=20,
 )
 
 print(optimizer.max)

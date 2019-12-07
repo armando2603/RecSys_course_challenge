@@ -19,32 +19,33 @@ from MatrixFactorization.PyTorch.MF_MSE_PyTorch import MF_MSE_PyTorch
 from Notebooks_utils.data_splitter import train_test_holdout
 from Base.Evaluation.Evaluator import EvaluatorHoldout
 from Hybrid.HybridRecommender import HybridRecommender
+from Hybrid.HybridPredRecommender import HybridPredRecommender
 from pathlib import Path
 
 
 Data = DataManager()
 
 
-# urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
-#
-# urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
 
-urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
-urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
+urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+
+# urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
+# urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
-evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
+# evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = HybridRecommender(urm_train)
+recommender = HybridPredRecommender(urm_train)
 
 tuning_params = dict()
 tuning_params = {
     "A": (0.1, 0.99),
-    "NN": (40, 300),
+    # "NN": (40, 300),
  }
 
 
-def search_param(NN, A):
-    recommender.fit(topK=int(NN), alpha=A)
+def search_param(A):
+    recommender.fit(alpha=A)
     res_test = evaluate(urm_test, recommender)
     return res_test["MAP"]
 

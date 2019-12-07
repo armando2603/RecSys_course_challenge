@@ -27,7 +27,7 @@ class HybridRecommender(BaseItemSimilarityMatrixRecommender):
         Similarity_1 = recommender1.W_sparse
 
         recommender2 = SLIM_BPR_Cython(URM_train)
-        recommender2.fit(epochs=100, lambda_i=0.3499518, lambda_j=0.3897793, learning_rate=0.002391)
+        recommender2.fit(epochs=199, lambda_i=0.09266940158, lambda_j=0.00169725, learning_rate=1e-6)
         Similarity_2 = recommender2.W_sparse
 
         if Similarity_1.shape != Similarity_2.shape:

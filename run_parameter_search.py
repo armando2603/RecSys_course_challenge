@@ -22,12 +22,12 @@ from Base.Evaluation.Evaluator import EvaluatorHoldout
 Data = DataManager()
 
 
-# urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
-#
-# urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
 
-urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
-urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
+urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+
+# urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
+# urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
@@ -43,15 +43,15 @@ tuning_params = {
     "L1": (0.0001, 0.5),
     "L2": (0.0001, 0.5),
     "NN": (40, 400),
-    "LE": (0.0001, 0.1)
+    "LE": (0.00001, 0.1)
  }
 
 
 def search_param(NN, L1, L2, LE):
-    recommender.fit(epochs=400, topK=NN, lambda_i=L1, lambda_j=L2, learning_rate=LE, **earlystopping_keywargs)
-    res_test, str = evaluator_test.evaluateRecommender(recommender)
-    #evaluate(urm_test, recommender)
-    return res_test[10]["MAP"]
+    recommender.fit(epochs=400, topK=int(NN), lambda_i=L1, lambda_j=L2, learning_rate=LE, **earlystopping_keywargs)
+    #res_test, str = evaluator_test.evaluateRecommender(recommender)
+    res_test = evaluate(urm_test, recommender)
+    return res_test["MAP"]
 
 
 optimizer = BayesianOptimization(

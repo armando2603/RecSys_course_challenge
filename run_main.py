@@ -40,24 +40,28 @@ if test:
 else:
     urm_train = Data.get_urm()
 
-earlystopping_keywargs = {"validation_every_n": 5,
-                              "stop_on_validation": True,
-                              "evaluator_object": evaluator_validation,
-                              "lower_validations_allowed": 5,
-                              "validation_metric": "MAP"
-                          }
+# earlystopping_keywargs = {"validation_every_n": 5,
+#                               "stop_on_validation": True,
+#                               "evaluator_object": evaluator_validation,
+#                               "lower_validations_allowed": 5,
+#                               "validation_metric": "MAP"
+#                           }
 
 
 # icm_price, icm_asset = Data.get_icm()
 
-MyRecommender = HybridRecommender(urm_train)
-MyRecommender.fit()
-# SecondRecommender = UserKNNCFRecommender(urm_train)
-# SecondRecommender.fit(topK=249, shrink=1)
+# MyRecommender = HybridRecommender(urm_train)
+# MyRecommender.fit(alpha=0.39153191, topK=77)
+# MyRecommender = ItemKNNCFRecommender(urm_train)
+# MyRecommender.fit(topK=40, shrink=30)
+MyRecommender = SLIM_BPR_Cython(urm_train)
+MyRecommender.fit(epochs=198, lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391)
 
 if test:
 
     evaluate(urm_test, MyRecommender)
+    # result, str_result = evaluator_test.evaluateRecommender(MyRecommender)
+    # print(result)
 
 else:
 

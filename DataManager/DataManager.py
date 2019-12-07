@@ -10,7 +10,6 @@ import sklearn as sk
 from sklearn import feature_extraction
 from pathlib import Path
 from sklearn.preprocessing import MultiLabelBinarizer, normalize
-from pathlib import Path
 
 """
 This class is used to create dataframes from the data
@@ -66,27 +65,37 @@ class DataManager(object):
         return ucm_tfidf
 
     def get_icm(self):
+        urm = self.get_urm()
+        n_item = urm.shape[1]
         print('Building ICM from items...')
 
         # 1 - Price
 
-        item_data = pd.read_csv(data_folder / "data_ICM_price.csv")
-        price = item_data.reindex(columns=['row', 'data'])  # sto trattando i prezzi degli item
-        price.sort_values(by='row', inplace=True)  # this seems not useful, values are already ordered
-        price_list = [[a] for a in price['data']]
-        icm_price = MultiLabelBinarizer(sparse_output=True).fit_transform(price_list)
-        icm_price_csr = icm_price.tocsr()
+        price_df = pd.read_csv(data_folder / "Data/data_ICM_price.csv")
+        list_price = list(price_df['data'])
+        list_item = list(price_df['row'])
+        n_price = len(list(price_df['data'].unique()))
+        icm_shape = (n_item, n_price)
+
+        ones = np.ones(len(list_price))
+        icm_price = sps.coo_matrix((ones, (list_item, list_price)), shape=icm_shape)
+        icm_price = icm_price.tocsr()
+
 
         # 2 - Asset
 
-        item_data = pd.read_csv(data_folder / "data_ICM_asset.csv")
-        asset = item_data.reindex(columns=['row', 'data'])  # sto trattando i prezzi degli item
-        asset.sort_values(by='row', inplace=True)  # this seems not useful, values are already ordered
-        asset_list = [[a] for a in asset['data']]
-        icm_asset = MultiLabelBinarizer(sparse_output=True).fit_transform(asset_list)
-        icm_asset_csr = icm_asset.tocsr()
+        asset_df = pd.read_csv(data_folder / "Data/data_ICM_asset.csv")
+        list_asset = list(asset_df['data'])
+        list_item = list(asset_df['row'])
+        n_asset = len(list(asset_df['data'].unique()))
+        icm_shape = (n_item, n_asset)
 
-        icm = sps.hstack((icm_price_csr, icm_asset_csr))
-        return icm.tocsr()
+        ones = np.ones(len(list_asset))
+        icm_asset = sps.coo_matrix((ones, (list_item, list_asset)), shape=icm_shape)
+        icm_asset = icm_asset.tocsr()
+
+        # icm = sps.hstack((icm_price, icm_asset))
+        # return icm.tocsr()
+        return icm_price, icm_asset
 
 

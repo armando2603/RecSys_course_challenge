@@ -18,6 +18,9 @@ import pandas as pd
 from Evaluator.evaluation import evaluate
 from DataManager.split_train_validation_leave_k_out import split_train_leave_k_out_user_wise
 from pathlib import Path
+from Base.Evaluation.Evaluator import EvaluatorHoldout
+from Notebooks_utils.data_splitter import train_test_holdout
+from Hybrid.HybridRecommender import HybridRecommender
 
 data_folder = Path(__file__).parent.absolute()
 
@@ -25,15 +28,30 @@ test = True
 
 Data = DataManager()
 
+
+
 if test:
-    urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False,
-                                                            leave_random_out=True)
+    # urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
+    # urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+    urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
+    urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
+    evaluator_validation = EvaluatorHoldout(urm_valid, cutoff_list=[10])
+    evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 else:
     urm_train = Data.get_urm()
 
-MyRecommender = UserKNNCFRecommender(urm_train)
-MyRecommender.fit(topK=20, shrink=30)
+earlystopping_keywargs = {"validation_every_n": 5,
+                              "stop_on_validation": True,
+                              "evaluator_object": evaluator_validation,
+                              "lower_validations_allowed": 5,
+                              "validation_metric": "MAP"
+                          }
 
+
+# icm_price, icm_asset = Data.get_icm()
+
+MyRecommender = HybridRecommender(urm_train)
+MyRecommender.fit()
 # SecondRecommender = UserKNNCFRecommender(urm_train)
 # SecondRecommender.fit(topK=249, shrink=1)
 
@@ -54,5 +72,5 @@ else:
         recommended_list.append(items_strings)
 
     submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-    submission.to_csv(data_folder / 'my_submission.csv', index=False)
+    submission.to_csv(data_folder / 'Data/my_submission.csv', index=False)
 

@@ -43,7 +43,7 @@ class IALSRecommender(BaseMatrixFactorizationRecommender, Incremental_Training_E
             alpha = 1.0,
             epsilon = 1.0,
             reg = 1e-3,
-            init_mean=76.0,
+            init_mean=140.0,
             init_std=0.1,
             **earlystopping_kwargs):
         """

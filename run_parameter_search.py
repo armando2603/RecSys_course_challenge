@@ -42,13 +42,13 @@ tuning_params = dict()
 tuning_params = {
     "L1": (0.0001, 0.5),
     "L2": (0.0001, 0.5),
-    "NN": (40, 300),
+    "NN": (40, 400),
     "LE": (0.0001, 0.1)
  }
 
 
 def search_param(NN, L1, L2, LE):
-    recommender.fit(epochs=100, topK=NN, lambda_i=L1, lambda_j=L2, learning_rate=LE, **earlystopping_keywargs)
+    recommender.fit(epochs=400, topK=NN, lambda_i=L1, lambda_j=L2, learning_rate=LE, **earlystopping_keywargs)
     res_test, str = evaluator_test.evaluateRecommender(recommender)
     #evaluate(urm_test, recommender)
     return res_test[10]["MAP"]

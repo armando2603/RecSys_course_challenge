@@ -60,14 +60,14 @@ optimizer = BayesianOptimization(
 
 
 
-logger = JSONLogger(path='Log/tmp/'+recommender.RECOMMENDER_NAME+'.json')
+logger = JSONLogger(path='Logs/tmp/'+recommender.RECOMMENDER_NAME+'.json')
 optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
 
 
 optimizer.maximize(
     init_points=15,
-    n_iter=40,
+    n_iter=20,
 )
 
 print(optimizer.max)

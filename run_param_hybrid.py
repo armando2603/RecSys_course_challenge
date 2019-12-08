@@ -28,7 +28,7 @@ Data = DataManager()
 
 urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
 
-urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+# urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
 
 # urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
 # urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
@@ -39,13 +39,15 @@ recommender = HybridPredRecommender(urm_train)
 
 tuning_params = dict()
 tuning_params = {
-    "A": (0.1, 0.99),
+    "A": (0.3, 0.5),
+    "B": (0.1, 0.4),
+    "G": (0.01, 0.1)
     # "NN": (40, 300),
  }
 
 
-def search_param(A):
-    recommender.fit(alpha=A)
+def search_param(A, B, G):
+    recommender.fit(alpha=A, beta=B, gamma=G)
     res_test = evaluate(urm_test, recommender)
     return res_test["MAP"]
 

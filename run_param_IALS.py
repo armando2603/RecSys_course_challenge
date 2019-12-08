@@ -18,44 +18,47 @@ from bayes_opt.util import load_logs
 from MatrixFactorization.PyTorch.MF_MSE_PyTorch import MF_MSE_PyTorch
 from Notebooks_utils.data_splitter import train_test_holdout
 from Base.Evaluation.Evaluator import EvaluatorHoldout
+from MatrixFactorization.IALSRecommender import IALSRecommender
 
 Data = DataManager()
 
 
-urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
+urm_train, urm_valid = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
 
-# urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+#urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
 
 # urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
 # urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
-# evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
+evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 # evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = UserKNNCFRecommender(urm_train)
-# earlystopping_keywargs = {"validation_every_n": 5,
-#                               "stop_on_validation": True,
-#                               "evaluator_object": evaluator_valid,
-#                               "lower_validations_allowed": 5,
-#                               "validation_metric": "MAP"
-#                           }
+recommender = IALSRecommender(urm_train)
+earlystopping_keywargs = {"validation_every_n": 5,
+                              "stop_on_validation": True,
+                              "evaluator_object": evaluator_valid,
+                              "lower_validations_allowed": 2,
+                              "validation_metric": "MAP"
+                          }
 tuning_params = dict()
 tuning_params = {
     # "L1": (0.0001, 0.5),
     # "L2": (0.0001, 0.5),
-    "NN": (280, 330),
+    # "NN": (280, 330),
     # "LE": (0.00001, 0.1),
-    "SH": (1, 10)
+    # "SH": (1, 10),
+    "NF": (50, 100),
+    "A": (0.1, 40),
+    "REG": (0.0001, 0.1)
  }
 
 
 def search_param(**tuning_params):
     # recommender.fit(epochs=400, topK=int(tuning_params['NN']), lambda_i=tuning_params['L1'],
     #                 lambda_j=tuning_params['L2'], learning_rate=tuning_params['LE'], **earlystopping_keywargs)
-    recommender.fit(topK=int(tuning_params['NN']), shrink=tuning_params['SH'])
+    recommender.fit(epochs=30, alpha=tuning_params['A'], num_factors=int(tuning_params['NF']), reg=tuning_params['REG'], **earlystopping_keywargs)
     #res_test, str = evaluator_test.evaluateRecommender(recommender)
-    res_test = evaluate(urm_test, recommender)
-    return res_test["MAP"]
-
+    res_test, str = evaluator_valid.evaluateRecommender(recommender)
+    return res_test[10]["MAP"]
 
 optimizer = BayesianOptimization(
     f=search_param,
@@ -70,20 +73,19 @@ optimizer = BayesianOptimization(
 logger = JSONLogger(path="./Logs/tmp/" + recommender.RECOMMENDER_NAME + ".json")
 optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
-# optimizer.probe(
-#     params={"NN": 21,
-#     "BA": 1,
-#     "EP": 399,
-#     "LE": 0.0007,
-#     "L1": 0.0444,
-#     "L2": 0.02658285},
-#     lazy=True,
-# )
+optimizer.probe(
+    params={
+    'A': 5.0,
+    'NF': 99.9773715259928,
+    'REG': 0.0189810660740337},
+    lazy=True,
+)
+
 
 
 optimizer.maximize(
     init_points=15,
-    n_iter=40,
+    n_iter=50,
 )
 
 print(optimizer.max)

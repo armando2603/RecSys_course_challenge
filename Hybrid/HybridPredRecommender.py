@@ -2,6 +2,7 @@ from Base.Recommender_utils import check_matrix, similarityMatrixTopK
 from Base.BaseSimilarityMatrixRecommender import BaseItemSimilarityMatrixRecommender
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
+from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 
 class HybridPredRecommender(BaseItemSimilarityMatrixRecommender):
     """ HybridPredRecommender
@@ -20,17 +21,25 @@ class HybridPredRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_2 = SLIM_BPR_Cython(URM_train)
         recommender_2.fit(epochs=199, lambda_i=0.09266940158, lambda_j=0.00169725, learning_rate=1e-6)
 
+        recommender_3 = UserKNNCFRecommender(URM_train)
+        recommender_3.fit(shrink=0, topK=321)
+
+
         self.URM_train = check_matrix(URM_train.copy(), 'csr')
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2
+        self.recommender_3 = recommender_3
 
-    def fit(self, alpha=0.5):
+    def fit(self, alpha=.3, beta=.03, gamma=0.3):
         self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
 
     def _compute_item_score(self, user_id_array, items_to_compute):
         item_weights_1 = self.recommender_1._compute_item_score(user_id_array)
         item_weights_2 = self.recommender_2._compute_item_score(user_id_array)
+        item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
 
-        item_weights = item_weights_1 * self.alpha + item_weights_2 * (1 - self.alpha)
+        item_weights = item_weights_1 * self.alpha + item_weights_2 * self.beta + item_weights_3 * self.gamma
 
         return item_weights

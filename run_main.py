@@ -31,12 +31,12 @@ Data = DataManager()
 
 
 if test:
-    # urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
+    urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
     # urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
-    urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
-    urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
-    evaluator_validation = EvaluatorHoldout(urm_valid, cutoff_list=[10])
-    evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
+    # urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
+    # urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
+    # evaluator_validation = EvaluatorHoldout(urm_valid, cutoff_list=[10])
+    # evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 else:
     urm_train = Data.get_urm()
 
@@ -52,10 +52,10 @@ else:
 
 # MyRecommender = HybridRecommender(urm_train)
 # MyRecommender.fit(alpha=0.39153191, topK=77)
-# MyRecommender = ItemKNNCFRecommender(urm_train)
-# MyRecommender.fit(topK=40, shrink=30)
-MyRecommender = SLIM_BPR_Cython(urm_train)
-MyRecommender.fit(epochs=198, lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391)
+MyRecommender = ItemKNNCFRecommender(urm_train)
+MyRecommender.fit(topK=20, shrink=30)
+# MyRecommender = SLIM_BPR_Cython(urm_train)
+# MyRecommender.fit(epochs=198, lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391)
 
 if test:
 

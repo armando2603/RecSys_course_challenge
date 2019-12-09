@@ -20,7 +20,7 @@ from DataManager.split_train_validation_leave_k_out import split_train_leave_k_o
 from pathlib import Path
 from Base.Evaluation.Evaluator import EvaluatorHoldout
 from Notebooks_utils.data_splitter import train_test_holdout
-from Hybrid.HybridRecommender import HybridRecommender
+from Hybrid.Hybrid2PredRecommender import  Hybrid2PredRecommender
 
 data_folder = Path(__file__).parent.absolute()
 
@@ -31,7 +31,8 @@ Data = DataManager()
 
 
 if test:
-    urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
+    urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True, threshold=10 , cold=True)
+    #urm_train, urm_test = Data.split_warm_leave_one_out_random()
     # urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
     # urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
     # urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
@@ -48,14 +49,20 @@ else:
 #                           }
 
 
-# icm_price, icm_asset = Data.get_icm()
+icm_price, icm_asset = Data.get_icm()
 
+# MyRecommender = Hybrid2PredRecommender(urm_train)
+# MyRecommender.fit(alpha=0.6, beta=0.000001)
+# MyRecommender = IALSRecommender(urm_train)
+# MyRecommender.fit(alpha=6, epochs=20, reg=0.1528993352584987, num_factors=260)
+# MyRecommender = ItemKNNCBFRecommender(urm_train, icm_price)
+# MyRecommender.fit(topK=200, shrink=50)
 # MyRecommender = HybridRecommender(urm_train)
-# MyRecommender.fit(alpha=0.39153191, topK=77)
-MyRecommender = ItemKNNCFRecommender(urm_train)
-MyRecommender.fit(topK=20, shrink=30)
-# MyRecommender = SLIM_BPR_Cython(urm_train)
-# MyRecommender.fit(epochs=198, lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391)
+# # MyRecommender.fit(alpha=0.39153191, topK=77)
+# MyRecommender = ItemKNNCFRecommender(urm_train)
+# MyRecommender.fit(topK=20, shrink=30)
+MyRecommender = SLIM_BPR_Cython(urm_train)
+MyRecommender.fit(epochs=198, lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391)
 
 if test:
 
@@ -71,10 +78,10 @@ else:
     for user in tqdm(users):
         recommended_items = MyRecommender.recommend(user, 10)
         # if len(recommended_items) == 0:
-        #     recommended_items = SecondRecommender.recommend(user, 10)
+        #     recommended_items = MyRecommender2.recommend(user, 10)
         items_strings = ' '.join([str(i) for i in recommended_items])
         recommended_list.append(items_strings)
 
     submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-    submission.to_csv(data_folder / 'Data/my_submission.csv', index=False)
+    submission.to_csv(data_folder / 'Data/UserKNNCF_submission.csv', index=False)
 

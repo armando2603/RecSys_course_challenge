@@ -10,6 +10,8 @@ import sklearn as sk
 from sklearn import feature_extraction
 from pathlib import Path
 from sklearn.preprocessing import MultiLabelBinarizer, normalize
+from collections import defaultdict
+from random import randint, random, uniform
 
 """
 This class is used to create dataframes from the data
@@ -27,7 +29,14 @@ class DataManager(object):
     def __init__(self):
 
         self.train = pd.read_csv(data_folder / 'Data/data_train.csv')
-        #self.items = pd.read_csv('Data/items.csv')
+
+        # Build the URM matrix
+
+        users = self.get_raw_users()
+        items = self.get_raw_items()
+        length = items.shape[0]
+        urm = sps.coo_matrix((np.ones(length), (users, items)))
+        self.urm = urm.tocsr()
 
     def get_target_users(self):
         sample_df = pd.read_csv(data_folder / 'Data/alg_sample_submission.csv')
@@ -50,12 +59,7 @@ class DataManager(object):
 
     def get_urm(self):
         print('Building URM...')
-        users = self.get_raw_users()
-        items = self.get_raw_items()
-        length = items.shape[0]
-        urm = sps.coo_matrix((np.ones(length), (users, items)))
-        urm = urm.tocsr()
-        return urm
+        return self.urm
 
     def get_ucm(self, urm):
         print('Building UCM from URM...')
@@ -65,7 +69,7 @@ class DataManager(object):
         return ucm_tfidf
 
     def get_icm(self):
-        urm = self.get_urm()
+        urm = self.urm
         n_item = urm.shape[1]
         print('Building ICM from items...')
 
@@ -97,5 +101,43 @@ class DataManager(object):
         # icm = sps.hstack((icm_price, icm_asset))
         # return icm.tocsr()
         return icm_price, icm_asset
+
+    def split_warm_leave_one_out_random(self, threshold=10):
+        print('Build warm URM....')
+        urm = self.urm
+        urm_df = self.train
+        # splitting URM in test set e train set
+        selected_users = np.array([])
+        available_users = np.arange(urm.shape[0])
+
+        for user_id in available_users:
+            if len(urm[user_id].indices) > threshold:
+                selected_users = np.append(selected_users, user_id)
+
+        grouped = urm_df.groupby('row', as_index=True).apply(lambda x: list(x['col']))
+
+        selected_items = np.array([])
+
+        for user_id in selected_users:
+            items = np.array(grouped[user_id])
+
+            index = randint(0, len(items) - 1)
+            removed_track = items[index]
+            selected_items = np.append(selected_items, removed_track)
+            items = np.delete(items, index)
+            grouped[user_id] = items
+
+        all_items = urm_df["col"].unique()
+
+        matrix = MultiLabelBinarizer(classes=all_items, sparse_output=True).fit_transform(grouped)
+        urm_train_warm = matrix.tocsr()
+        urm_train_warm = urm_train_warm.astype(np.float64)
+
+        ones = np.ones(selected_users.shape[0])
+
+        urm_test_warm = sps.coo_matrix((ones, (selected_users, selected_items)), shape=urm.shape)
+        urm_test_warm = urm_test_warm.tocsr()
+
+        return urm_train_warm, urm_test_warm
 
 

@@ -37,6 +37,7 @@ class DataManager(object):
         length = items.shape[0]
         urm = sps.coo_matrix((np.ones(length), (users, items)))
         self.urm = urm.tocsr()
+        self.cold_user_list = {}
 
     def get_target_users(self):
         sample_df = pd.read_csv(data_folder / 'Data/alg_sample_submission.csv')
@@ -61,12 +62,42 @@ class DataManager(object):
         print('Building URM...')
         return self.urm
 
-    def get_ucm(self, urm):
-        print('Building UCM from URM...')
+    def get_ucm(self):
+        print('Building UCM ...')
 
-        ucm_tfidf = feature_extraction.text.TfidfTransformer().fit_transform(urm.T)
-        ucm_tfidf = ucm_tfidf.T
-        return ucm_tfidf
+        n_users = self.urm.shape[0]
+
+        # Build the age UCM
+
+        age_df = pd.read_csv('Data/data_UCM_age.csv')
+
+        list_user = list(age_df['row'])
+        list_age = list(age_df['col'])
+
+        n_age = max(list_age)+1
+        ucm_shape = (n_users, n_age)
+
+        ones = np.ones(len(list_user))
+
+        ucm_age = sps.coo_matrix((ones, (list_user, list_age)), shape=ucm_shape)
+        ucm_age = ucm_age.tocsr()
+
+        # Build the Region UCM
+
+        region_df = pd.read_csv('Data/data_UCM_region.csv')
+
+        list_user = list(region_df['row'])
+        list_region = list(region_df['col'])
+
+        n_region = max(list_region)+1
+        ucm_shape = (n_users, n_region)
+
+        ones = np.ones(len(list_region))
+
+        ucm_region = sps.coo_matrix((ones, (list_user, list_region)), shape=ucm_shape)
+        ucm_region = ucm_region.tocsr()
+
+        return ucm_age, ucm_region
 
     def get_icm(self):
         urm = self.urm
@@ -102,42 +133,41 @@ class DataManager(object):
         # return icm.tocsr()
         return icm_price, icm_asset
 
-    def split_warm_leave_one_out_random(self, threshold=10):
-        print('Build warm URM....')
+    def get_cold_users(self, threshold=10):
+        if not self.cold_user_list:
+            urm = self.urm
+            n_users, n_items = urm.shape
+            cold_user_list = {}
+            for user in range(n_users):
+                cold_user_list[user] = False
+
+            for user_id in range(n_users):
+                start_user_position = urm.indptr[user_id]
+                end_user_position = urm.indptr[user_id + 1]
+
+                user_profile = urm.indices[start_user_position:end_user_position]
+
+                if len(user_profile) <= threshold:
+                    cold_user_list[user_id] = True
+
+            self.cold_user_list = cold_user_list
+
+        return self.cold_user_list
+
+    def get_warm_users(self, threshold=10):
         urm = self.urm
-        urm_df = self.train
-        # splitting URM in test set e train set
-        selected_users = np.array([])
-        available_users = np.arange(urm.shape[0])
+        n_users, n_items = urm.shape
+        warm_user_list = []
 
-        for user_id in available_users:
-            if len(urm[user_id].indices) > threshold:
-                selected_users = np.append(selected_users, user_id)
+        for user_id in range(n_users):
+            start_user_position = urm.indptr[user_id]
+            end_user_position = urm.indptr[user_id + 1]
 
-        grouped = urm_df.groupby('row', as_index=True).apply(lambda x: list(x['col']))
+            user_profile = urm.indices[start_user_position:end_user_position]
 
-        selected_items = np.array([])
+            if len(user_profile) > threshold:
+                warm_user_list.append(user_id)
 
-        for user_id in selected_users:
-            items = np.array(grouped[user_id])
-
-            index = randint(0, len(items) - 1)
-            removed_track = items[index]
-            selected_items = np.append(selected_items, removed_track)
-            items = np.delete(items, index)
-            grouped[user_id] = items
-
-        all_items = urm_df["col"].unique()
-
-        matrix = MultiLabelBinarizer(classes=all_items, sparse_output=True).fit_transform(grouped)
-        urm_train_warm = matrix.tocsr()
-        urm_train_warm = urm_train_warm.astype(np.float64)
-
-        ones = np.ones(selected_users.shape[0])
-
-        urm_test_warm = sps.coo_matrix((ones, (selected_users, selected_items)), shape=urm.shape)
-        urm_test_warm = urm_test_warm.tocsr()
-
-        return urm_train_warm, urm_test_warm
+        return warm_user_list
 
 

@@ -6,24 +6,24 @@ from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 
-class HybridCBFRecommender(BaseItemSimilarityMatrixRecommender):
-    """ HybridCBFRecommender
+class HybridZeroRecommender(BaseItemSimilarityMatrixRecommender):
+    """ HybridZeroRecommender
     Hybrid of two prediction scores R = R1*alpha + R2*(1-alpha)
 
     """
 
-    RECOMMENDER_NAME = "HybridCBFRecommender"
+    RECOMMENDER_NAME = "HybridZeroRecommender"
 
-    def __init__(self, urm_train, ucm_age, ucm_region):
-        super(HybridCBFRecommender, self).__init__(urm_train)
+    def __init__(self, urm_train, ucm_all):
+        super(HybridZeroRecommender, self).__init__(urm_train)
 
         urm_train = check_matrix(urm_train.copy(), 'csr')
 
-        recommender_1 = UserKNNCBFRecommender(urm_train, ucm_age)
-        recommender_1.fit(topK=250, shrink=0)
+        recommender_1 = TopPop(urm_train)
+        recommender_1.fit()
 
-        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_region)
-        recommender_2.fit(topK=250, shrink=0)
+        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
+        recommender_2.fit(shrink=0, topK=400)
 
         # recommender_3 = UserKNNCFRecommender(URM_train)
         # recommender_3.fit(shrink=4, topK=400)

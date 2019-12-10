@@ -19,7 +19,7 @@ from MatrixFactorization.PyTorch.MF_MSE_PyTorch import MF_MSE_PyTorch
 from Notebooks_utils.data_splitter import train_test_holdout
 from Base.Evaluation.Evaluator import EvaluatorHoldout
 from Hybrid.HybridRecommender import HybridRecommender
-from Hybrid.HybridPredRecommender import HybridPredRecommender
+from Hybrid.HybridWarmRecommender import HybridPredRecommender
 from pathlib import Path
 
 

@@ -69,7 +69,7 @@ class DataManager(object):
 
         # Build the age UCM
 
-        age_df = pd.read_csv('Data/data_UCM_age.csv')
+        age_df = pd.read_csv(data_folder /'Data/data_UCM_age.csv')
 
         list_user = list(age_df['row'])
         list_age = list(age_df['col'])
@@ -84,7 +84,7 @@ class DataManager(object):
 
         # Build the Region UCM
 
-        region_df = pd.read_csv('Data/data_UCM_region.csv')
+        region_df = pd.read_csv(data_folder /'Data/data_UCM_region.csv')
 
         list_user = list(region_df['row'])
         list_region = list(region_df['col'])

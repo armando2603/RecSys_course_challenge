@@ -97,7 +97,10 @@ class DataManager(object):
         ucm_region = sps.coo_matrix((ones, (list_user, list_region)), shape=ucm_shape)
         ucm_region = ucm_region.tocsr()
 
-        return ucm_age, ucm_region
+        ucm_all = sps.hstack((ucm_age, ucm_region))
+        ucm_all = ucm_all.tocsr()
+
+        return ucm_age, ucm_region, ucm_all
 
     def get_icm(self):
         urm = self.urm

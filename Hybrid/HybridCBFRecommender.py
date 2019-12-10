@@ -6,46 +6,43 @@ from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 
-class Hybrid2PredRecommender(BaseItemSimilarityMatrixRecommender):
-    """ HybridPredRecommender
+class HybridCBFRecommender(BaseItemSimilarityMatrixRecommender):
+    """ HybridCBFRecommender
     Hybrid of two prediction scores R = R1*alpha + R2*(1-alpha)
 
     """
 
-    RECOMMENDER_NAME = "Hybrid2PredRecommender"
+    RECOMMENDER_NAME = "HybridCBFRecommender"
 
-    def __init__(self, urm_train, ucm_all):
-        super(Hybrid2PredRecommender, self).__init__(urm_train)
+    def __init__(self, urm_train, ucm_age, ucm_region):
+        super(HybridCBFRecommender, self).__init__(urm_train)
 
         urm_train = check_matrix(urm_train.copy(), 'csr')
 
-        recommender_1 = ItemKNNCFRecommender(urm_train)
-        recommender_1.fit(topK=20, shrink=30)
+        recommender_1 = UserKNNCBFRecommender(urm_train, ucm_age)
+        recommender_1.fit(topK=250, shrink=0)
 
-        recommender_2 = TopPop(urm_train)
-        recommender_2.fit()
+        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_region)
+        recommender_2.fit(topK=250, shrink=0)
 
-        recommender_3 = UserKNNCBFRecommender(urm_train, ucm_all)
-        recommender_3.fit(shrink=4, topK=400)
-
+        # recommender_3 = UserKNNCFRecommender(URM_train)
+        # recommender_3.fit(shrink=4, topK=400)
 
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2
-        self.recommender_3 = recommender_3
+        # self.recommender_3 = recommender_3
 
-
-    def fit(self, alpha=.3, beta=.03, gamma=0.3):
+    def fit(self, alpha=0.3, beta=0.3, gamma=0):
         self.alpha = alpha
         self.beta = beta
-        self.gamma = gamma
+        # self.gamma = gamma
 
     def _compute_item_score(self, user_id_array, items_to_compute):
         item_weights_1 = self.recommender_1._compute_item_score(user_id_array)
         item_weights_2 = self.recommender_2._compute_item_score(user_id_array)
-        item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
+        # item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
 
         item_weights = item_weights_1 * self.alpha
         item_weights += item_weights_2 * self.beta
-        item_weights += item_weights_3 * self.gamma
 
         return item_weights

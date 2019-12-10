@@ -21,7 +21,7 @@ class HybridPredRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_2 = SLIM_BPR_Cython(URM_train)
         recommender_2.fit(epochs=90, lambda_i=0.0001, lambda_j=0.5, learning_rate=1.0025199253327697e-05, topK=198)
 
-        recommender_3 = UserKNNCFRecommender(URM_train)
+        recommender_3 = TopPop(URM_train)
         recommender_3.fit(shrink=4, topK=400)
 
 

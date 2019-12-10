@@ -24,13 +24,13 @@ class UserKNNCBFRecommender(BaseUserSimilarityMatrixRecommender):
 
     FEATURE_WEIGHTING_VALUES = ["BM25", "TF-IDF", "none"]
 
-    def __init__(self, URM_train, UCM_train, verbose=True):
+    def __init__(self, URM_train, ICM_train, verbose=True):
         super(UserKNNCBFRecommender, self).__init__(URM_train, verbose=verbose)
-        self.URM_train
-        self.UCM_train = UCM_train
-        self.S = None
 
-    def fit(self, topK=50, shrink=100, normalize=True, feature_weighting="none"):
+        self.ICM_train = ICM_train
+
+    def fit(self, topK=50, shrink=100, similarity='cosine', normalize=True, feature_weighting="none",
+            **similarity_args):
 
         self.topK = topK
         self.shrink = shrink
@@ -41,31 +41,16 @@ class UserKNNCBFRecommender(BaseUserSimilarityMatrixRecommender):
                     self.FEATURE_WEIGHTING_VALUES, feature_weighting))
 
         if feature_weighting == "BM25":
-            self.UCM_train = self.UCM_train.astype(np.float32)
-            self.UCM_train = okapi_BM_25(self.UCM_train)
+            self.ICM_train = self.ICM_train.astype(np.float32)
+            self.ICM_train = okapi_BM_25(self.ICM_train)
 
         elif feature_weighting == "TF-IDF":
-            self.UCM_train = self.UCM_train.astype(np.float32)
-            self.UCM_train = TF_IDF(self.UCM_train)
+            self.ICM_train = self.ICM_train.astype(np.float32)
+            self.ICM_train = TF_IDF(self.ICM_train)
 
-        S_matrix_list = []
+        similarity = Compute_Similarity(self.ICM_train.T, shrink=shrink, topK=topK, normalize=normalize,
+                                        similarity=similarity, **similarity_args)
 
-        UCM = self.UCM_train.tocsr()
-        UCM_T = UCM.T.tocsr()
-
-        for i in tqdm(range(0, UCM.shape[1])):
-            S_row = UCM_T[i] * UCM
-            r = S_row.data.argsort()[:-topK]
-            S_row.data[r] = 0
-
-            sparse.csr_matrix.eliminate_zeros(S_row)
-            S_matrix_list.append(S_row)
-
-        S = sc.sparse.vstack(S_matrix_list, format='csr')
-        S.setdiag(0)
-        self.S = S
-
-    def _compute_item_score(self, user_id_array, items_to_compute=None):
-        item_scores = self.URM_train[user_id_array, :] * self.S
-        return item_scores
+        self.W_sparse = similarity.compute_similarity()
+        self.W_sparse = check_matrix(self.W_sparse, format='csr')
 

@@ -137,7 +137,7 @@ def split_train_leave_k_out_user_wise(URM, k_out = 1, use_validation_set = False
 
         if temperature == 'zero':
 
-            if len(user_profile) == 2:
+            if len(user_profile) == 1:
                 if leave_random_out:
                     indices_to_suffle = np.arange(len(user_profile), dtype=np.int)
 

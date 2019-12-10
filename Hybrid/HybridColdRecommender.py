@@ -22,11 +22,11 @@ class HybridColdRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_1 = ItemKNNCFRecommender(urm_train)
         recommender_1.fit(topK=20, shrink=30)
 
-        recommender_2 = TopPop(urm_train)
-        recommender_2.fit()
+        # recommender_2 = TopPop(urm_train)
+        # recommender_2.fit()
 
-        # recommender_3 = UserKNNCBFRecommender(urm_train, ucm_all)
-        # recommender_3.fit(shrink=4, topK=400)
+        recommender_2 = UserKNNCFRecommender(urm_train)
+        recommender_2.fit(shrink=4, topK=400)
 
 
         self.recommender_1 = recommender_1

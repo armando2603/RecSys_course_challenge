@@ -28,8 +28,8 @@ from Hybrid.HybridWarmRecommender import HybridWarmRecommender
 
 data_folder = Path(__file__).parent.absolute()
 
-test = True
-threshold = 10
+test = False
+threshold = 5
 temperature = 'normal'
 Data = DataManager()
 
@@ -54,7 +54,7 @@ else:
 
 
 # icm_price, icm_asset = Data.get_icm()
-ucm_age, ucm_region, ucm_all = Data.get_ucm()
+
 
 zero_recommender = None
 cold_recommender = None
@@ -70,42 +70,43 @@ normal_recommender = None
 # MyRecommender = SLIM_BPR_Cython(urm_train)
 # MyRecommender.fit(epochs=198, lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391)
 
-if temperature == 'cold':
-    cold_recommender = HybridColdRecommender(urm_train)
-    cold_recommender.fit(alpha=1, beta=0)
+if temperature == 'cold' or test==False:
+    cold_recommender = ItemKNNCFRecommender(urm_train)
+    cold_recommender.fit(topK=20, shrink=30)
 
+if temperature == 'zero' or test==False:
+    ucm_age, ucm_region, ucm_all = Data.get_ucm()
+    zero_recommender = HybridZeroRecommender(urm_train, ucm_all)
+    zero_recommender.fit(alpha=0.02, beta=0.9)
 
-if temperature == 'zero':
-    # zero_recommender = HybridZeroRecommender(urm_train, ucm_all)
-    # zero_recommender.fit(alpha=0.8, beta=0.2)
-    zero_recommender = UserKNNCBFRecommender(urm_train, ucm_all)
-    zero_recommender.fit(shrink=0, topK=400)
-
-if temperature == 'warm':
-    warm_recommender = ItemKNNCFRecommender(urm_train)
-    warm_recommender.fit(topK=20, shrink=30)
+if temperature == 'warm' or test==False:
+    # warm_recommender = ItemKNNCFRecommender(urm_train)
+    # warm_recommender.fit(topK=20, shrink=30)
+    warm_recommender=cold_recommender
 
 if temperature == 'normal':
-    normal_recommender = ItemKNNCFRecommender(urm_train)
-    normal_recommender.fit(topK=20, shrink=30)
-
+    # normal_recommender = ItemKNNCFRecommender(urm_train)
+    # normal_recommender.fit(topK=20, shrink=30)
+    normal_recommender = UserKNNCFRecommender(urm_train)
+    normal_recommender.fit(shrink=4, topK=400)
 
 if test:
 
     if temperature == 'cold':
         result, str_result = evaluator_test.evaluateRecommender(cold_recommender)
-        print(result)
+        print('The Map is : {}'.format(result[10]['MAP']))
 
     if temperature == 'zero':
         result, str_result = evaluator_test.evaluateRecommender(zero_recommender)
-        print(result)
+        print('The Map is : {}'.format(result[10]['MAP']))
 
     if temperature == 'warm':
         result, str_result = evaluator_test.evaluateRecommender(warm_recommender)
-        print(result)
+        print('The Map is : {}'.format(result[10]['MAP']))
+
     if temperature == 'normal':
         result, str_result = evaluator_test.evaluateRecommender(normal_recommender)
-        print(result)
+        print('The Map is : {}'.format(result[10]['MAP']))
         # res_test = evaluate(urm_test, normal_recommender)
         # print(res_test)
 
@@ -115,14 +116,16 @@ else:
 
     recommended_list = []
     for user in tqdm(users):
-        # recommended_items = MyRecommender.recommend(user, 10)
-        if Data.get_cold_users(threshold=5)[user]:
-            recommended_items = cold_recommender.recommend(user, 10)
+        if Data.get_cold_users(0)[user]:
+            recommended_items = zero_recommender.recommend(user, 10)
         else:
-            recommended_items = warm_recommender.recommend(user, 10)
+            if Data.get_cold_users(threshold=threshold)[user]:
+                recommended_items = cold_recommender.recommend(user, 10)
+            else:
+                recommended_items = warm_recommender.recommend(user, 10)
         items_strings = ' '.join([str(i) for i in recommended_items])
         recommended_list.append(items_strings)
 
     submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-    submission.to_csv(data_folder / 'Data/Submissions/HybridCBF_submission.csv', index=False)
+    submission.to_csv(data_folder / 'Data/Submissions/After_Debug_submission.csv', index=False)
 

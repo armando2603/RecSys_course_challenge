@@ -35,7 +35,7 @@ recommender = SLIM_BPR_Cython(urm_train)
 earlystopping_keywargs = {"validation_every_n": 5,
                               "stop_on_validation": True,
                               "evaluator_object": evaluator_test,
-                              "lower_validations_allowed": 5,
+                              "lower_validations_allowed": 2,
                               "validation_metric": "MAP"
                           }
 tuning_params = dict()
@@ -72,10 +72,10 @@ optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
 optimizer.probe(
     params={
-    "NN": 198,
-    "LE": 1.0e-05,
-    "L1": 0.0001,
-    "L2": 0.5},
+    "NN": 201,
+    "LE": 0.008,
+    "L1": 0.02975,
+    "L2": 0.01885},
     lazy=True,
 )
 

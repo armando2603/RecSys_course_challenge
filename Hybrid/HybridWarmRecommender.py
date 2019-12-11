@@ -19,8 +19,8 @@ class HybridWarmRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_1 = ItemKNNCFRecommender(URM_train)
         recommender_1.fit(topK=20, shrink=30)
 
-        # recommender_2 = SLIM_BPR_Cython(URM_train)
-        # recommender_2.fit(epochs=60, lambda_i=0.0297, lambda_j=0.0188, learning_rate=0.008083, topK=202)
+        recommender_2 = SLIM_BPR_Cython(URM_train)
+        recommender_2.fit(epochs=60, lambda_i=0.0297, lambda_j=0.0188, learning_rate=0.008083, topK=202)
         #
         # recommender_3 = TopPop(URM_train)
         # recommender_3.fit()

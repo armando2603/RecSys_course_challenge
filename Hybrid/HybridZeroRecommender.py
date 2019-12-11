@@ -6,6 +6,7 @@ from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 
+
 class HybridZeroRecommender(BaseItemSimilarityMatrixRecommender):
     """ HybridZeroRecommender
     Hybrid of two prediction scores R = R1*alpha + R2*(1-alpha)

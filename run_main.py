@@ -11,6 +11,7 @@ from SLIM_ElasticNet.SLIMElasticNetRecommender import SLIMElasticNetRecommender
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from KNN.ItemKNNCBFRecommender import ItemKNNCBFRecommender
+from KNN.ItemKNNSimilarityHybridRecommender import ItemKNNSimilarityHybridRecommender
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_BPR_Cython, MatrixFactorization_FunkSVD_Cython, MatrixFactorization_AsySVD_Cython
 from MatrixFactorization.PureSVDRecommender import PureSVDRecommender
 from Base.NonPersonalizedRecommender import TopPop, Random, GlobalEffects
@@ -26,9 +27,10 @@ from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 from Hybrid.HybridZeroRecommender import HybridZeroRecommender
 from Hybrid.HybridWarmRecommender import HybridWarmRecommender
 
+
 data_folder = Path(__file__).parent.absolute()
 
-test = False
+test = True
 threshold = 5
 temperature = 'normal'
 Data = DataManager()
@@ -71,24 +73,35 @@ normal_recommender = None
 # MyRecommender.fit(epochs=198, lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391)
 
 if temperature == 'cold' or test==False:
-    cold_recommender = ItemKNNCFRecommender(urm_train)
-    cold_recommender.fit(topK=20, shrink=30)
+    recommender = IALSRecommender(urm_train)
+    recommender.fit(epochs=15, alpha=6.0, num_factors=250.0, reg=0.3)
+    cold_recommender = recommender
 
 if temperature == 'zero' or test==False:
     ucm_age, ucm_region, ucm_all = Data.get_ucm()
     zero_recommender = HybridZeroRecommender(urm_train, ucm_all)
     zero_recommender.fit(alpha=0.02, beta=0.9)
+    zero_recommender = recommender
 
 if temperature == 'warm' or test==False:
-    # warm_recommender = ItemKNNCFRecommender(urm_train)
-    # warm_recommender.fit(topK=20, shrink=30)
-    warm_recommender=cold_recommender
+    recommender = ItemKNNCFRecommender(urm_train)
+    recommender.fit(topK=20, shrink=30)
+    warm_recommender= recommender
 
 if temperature == 'normal':
     # normal_recommender = ItemKNNCFRecommender(urm_train)
     # normal_recommender.fit(topK=20, shrink=30)
-    normal_recommender = UserKNNCFRecommender(urm_train)
-    normal_recommender.fit(shrink=4, topK=400)
+    # recommender = SLIMElasticNetRecommender(urm_train)
+    # recommender.fit()
+    # recommender1 = ItemKNNCFRecommender(urm_train)
+    # recommender1.fit(topK=20, shrink=30)
+    icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
+    recommender = ItemKNNCBFRecommender(urm_train, icm_all)
+    recommender.fit(topK=100, shrink=0, feature_weighting='TF-IDF')
+    # recommender = ItemKNNSimilarityHybridRecommender(urm_train, recommender1.W_sparse, recommender2.W_sparse)
+    # recommender.fit(alpha=0.99, topK=200)
+
+    normal_recommender = recommender
 
 if test:
 

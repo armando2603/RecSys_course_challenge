@@ -132,9 +132,26 @@ class DataManager(object):
         icm_asset = sps.coo_matrix((ones, (list_item, list_asset)), shape=icm_shape)
         icm_asset = icm_asset.tocsr()
 
-        # icm = sps.hstack((icm_price, icm_asset))
-        # return icm.tocsr()
-        return icm_price, icm_asset
+        icm_all = sps.hstack((icm_price, icm_asset))
+        icm_all.tocsr()
+
+        # 3 - Sub_class
+
+        sub_df = pd.read_csv(data_folder / "Data/data_ICM_sub_class.csv")
+        list_sub = list(sub_df['col'])
+        list_item = list(sub_df['row'])
+        n_sub = len(list(sub_df['row'].unique()))
+
+        icm_shape = (n_item, n_sub)
+
+        ones = np.ones(len(list_sub))
+        icm_sub = sps.coo_matrix((ones, (list_item, list_sub)), shape=icm_shape)
+        icm_sub = icm_sub.tocsr()
+
+        icm_all = sps.hstack((icm_price, icm_asset, icm_sub))
+        icm_all.tocsr()
+
+        return icm_price, icm_asset, icm_sub, icm_all
 
     def get_cold_users(self, threshold=10):
         if not self.cold_user_list:

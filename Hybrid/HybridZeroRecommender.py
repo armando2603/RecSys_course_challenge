@@ -5,6 +5,7 @@ from SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
+from KNN.UserSimilarityHybridRecommender import UserSimilarityHybridRecommender
 
 
 class HybridZeroRecommender(BaseItemSimilarityMatrixRecommender):
@@ -23,11 +24,14 @@ class HybridZeroRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_1 = TopPop(urm_train)
         recommender_1.fit()
 
-        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
-        recommender_2.fit(shrink=0, topK=400)
+        recommender1 = UserKNNCFRecommender(urm_train)
+        recommender1.fit(topK=330, shrink=5)
 
-        # recommender_3 = UserKNNCFRecommender(URM_train)
-        # recommender_3.fit(shrink=4, topK=400)
+        recommender2 = UserKNNCBFRecommender(urm_train, ucm_all)
+        recommender2.fit(shrink=5, topK=400)
+
+        recommender_2 = UserSimilarityHybridRecommender(urm_train, recommender1.W_sparse, recommender2.W_sparse)
+        recommender_2.fit(alpha=0.93)
 
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2

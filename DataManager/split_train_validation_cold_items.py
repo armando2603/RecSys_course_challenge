@@ -109,7 +109,7 @@ def _zero_out_values(sparse_matrix, columns_to_zero = None, rows_to_zero = None)
 
 
 
-def split_train_in_two_cold_items(URM_all, ICM_list = None, train_item_percentage = 0.1, train_interaction_percentage = None):
+def split_train_in_two_cold_items(URM_all, ICM_list = None, train_item_percentage = 0.9, train_interaction_percentage = None):
     """
     The function splits an URM in two matrices selecting the number of interactions one user at a time
     :param URM_train:

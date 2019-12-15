@@ -12,6 +12,11 @@ from pathlib import Path
 from sklearn.preprocessing import MultiLabelBinarizer, normalize
 from collections import defaultdict
 from random import randint, random, uniform
+import numpy as np
+import scipy.sparse as sps
+from DataManager.IncrementalSparseMatrix import IncrementalSparseMatrix
+import math
+from tqdm import tqdm
 
 """
 This class is used to create dataframes from the data
@@ -60,7 +65,7 @@ class DataManager(object):
 
     def get_urm(self):
         print('Building URM...')
-        return self.urm
+        return self.urm.tocsr()
 
     def get_ucm(self):
         print('Building UCM ...')
@@ -112,7 +117,18 @@ class DataManager(object):
         price_df = pd.read_csv(data_folder / "Data/data_ICM_price.csv")
         list_price = list(price_df['data'])
         list_item = list(price_df['row'])
-        n_price = len(list(price_df['data'].unique()))
+
+        intervallo1 = np.arange(1001, step=200)
+        intervallo2 = np.arange(start=2000, stop=10001, step=1000)
+        intervallo3 = np.arange(start=20000, stop=100001, step=10000)
+        intervallo = np.append(intervallo1, intervallo2)
+        intervallo = np.append(intervallo, intervallo3)
+        list_price = np.array(list_price)
+        list_price = list_price * 100000
+        list_price = np.digitize(list_price, intervallo)
+
+        n_price = max(list_price)+1
+
         icm_shape = (n_item, n_price)
 
         ones = np.ones(len(list_price))
@@ -125,15 +141,26 @@ class DataManager(object):
         asset_df = pd.read_csv(data_folder / "Data/data_ICM_asset.csv")
         list_asset = list(asset_df['data'])
         list_item = list(asset_df['row'])
-        n_asset = len(list(asset_df['data'].unique()))
+
+        interval1 = np.arange(1001, step=1000 / 3)
+        interval2 = np.arange(start=1500, stop=2001, step=500)
+        interval3 = np.arange(start=3000, stop=10001, step=1000)
+        interval4 = np.array([100000])
+        final_interval = np.append(interval1, interval2)
+        final_interval = np.append(final_interval, interval3)
+        final_interval = np.append(final_interval, interval4)
+        list_asset = np.array(list_asset)
+        list_asset = list_asset * 100000
+        list_asset = np.digitize(list_asset, final_interval)
+        n_asset = max(list_asset)+1
         icm_shape = (n_item, n_asset)
 
         ones = np.ones(len(list_asset))
         icm_asset = sps.coo_matrix((ones, (list_item, list_asset)), shape=icm_shape)
         icm_asset = icm_asset.tocsr()
 
-        icm_all = sps.hstack((icm_price, icm_asset))
-        icm_all.tocsr()
+        # icm_all = sps.hstack((icm_price, icm_asset))
+        # icm_all.tocsr()
 
         # 3 - Sub_class
 
@@ -179,6 +206,7 @@ class DataManager(object):
         n_users, n_items = urm.shape
         warm_user_list = []
 
+
         for user_id in range(n_users):
             start_user_position = urm.indptr[user_id]
             end_user_position = urm.indptr[user_id + 1]
@@ -191,3 +219,159 @@ class DataManager(object):
         return warm_user_list
 
 
+    def modify_urm_item_warm(self, urm, thresold=10):
+        warm_items_mask = np.ediff1d(urm.tocsc().indptr) > thresold
+        warm_items = np.arange(urm.shape[1])[warm_items_mask]
+
+        urm = urm[:, warm_items]
+
+        return urm
+
+    def modify_urm_user_warm(self, urm, thresold=10):
+        warm_users_mask = np.ediff1d(urm.tocsr().indptr) > thresold
+        warm_users = np.arange(urm.shape[0])[warm_users_mask]
+
+        urm = urm[warm_users, :]
+        return urm
+
+    def get_urm_warm_items(self, threshold=10):
+        users = self.get_raw_users()
+        items = self.get_raw_items()
+        length = items.shape[0]
+
+        urm_csc = self.urm.tocsc()
+
+        item_interactions = np.ediff1d(urm_csc.indptr)
+        warm_items = item_interactions > threshold
+        new_users = []
+        new_items = []
+        for index in np.arange(length):
+            if warm_items[items[index]]:
+                new_users.append(users[index])
+                new_items.append((items[index]))
+
+        new_length = len(new_items)
+
+        urm = sps.coo_matrix((np.ones(new_length), (new_users, new_items)))
+        urm = urm.tocsr()
+
+        return urm
+
+    def get_urm_warm_users(self, threshold=10):
+
+        n_users, n_items = self.urm.shape
+
+        urm_train_builder = IncrementalSparseMatrix(auto_create_row_mapper=False, n_rows=n_users,
+                                                    auto_create_col_mapper=False, n_cols=n_items)
+
+        for user_id in range(n_users):
+            start_user_position = self.urm.indptr[user_id]
+            end_user_position = self.urm.indptr[user_id + 1]
+
+            user_profile = self.urm.indices[start_user_position:end_user_position]
+
+            if len(user_profile) > threshold:
+                user_interaction_items_train = user_profile
+                user_interaction_data_train = self.urm.data[start_user_position:end_user_position]
+
+                urm_train_builder.add_data_lists([user_id] * len(user_interaction_items_train),
+                                                 user_interaction_items_train, user_interaction_data_train)
+
+        warm_urm = urm_train_builder.get_SparseMatrix()
+        warm_urm = sps.csr_matrix(warm_urm)
+        user_no_item_train = np.sum(np.ediff1d(warm_urm.indptr) == 0)
+
+        if user_no_item_train != 0:
+            print("Warning: {} ({:.2f} %) of {} users have no Train items".format(user_no_item_train,
+                                                                                  user_no_item_train / n_users * 100,
+                                                                                  n_users))
+        return warm_urm
+
+    def get_urm_warm_users_items(self, threshold_user=10, threshold_item=10):
+
+        # Elimino Items
+
+        users = self.get_raw_users()
+        items = self.get_raw_items()
+        length = items.shape[0]
+
+        urm_csc = self.urm.tocsc()
+
+        item_interactions = np.ediff1d(urm_csc.indptr)
+        warm_items = item_interactions > threshold_item
+        new_users = []
+        new_items = []
+        for index in np.arange(length):
+            if warm_items[items[index]]:
+                new_users.append(users[index])
+                new_items.append((items[index]))
+
+        new_length = len(new_items)
+
+        urm = sps.coo_matrix((np.ones(new_length), (new_users, new_items)))
+        urm = urm.tocsr()
+
+        #### Elimino Users
+
+        n_users, n_items = urm.shape
+
+        urm_train_builder = IncrementalSparseMatrix(auto_create_row_mapper=False, n_rows=n_users,
+                                                    auto_create_col_mapper=False, n_cols=n_items)
+
+        for user_id in range(n_users):
+            start_user_position = urm.indptr[user_id]
+            end_user_position = urm.indptr[user_id + 1]
+
+            user_profile = urm.indices[start_user_position:end_user_position]
+
+            if len(user_profile) > threshold_user:
+                user_interaction_items_train = user_profile
+                user_interaction_data_train = urm.data[start_user_position:end_user_position]
+
+                urm_train_builder.add_data_lists([user_id] * len(user_interaction_items_train),
+                                                 user_interaction_items_train, user_interaction_data_train)
+
+        warm_urm = urm_train_builder.get_SparseMatrix()
+        warm_urm = sps.csr_matrix(warm_urm)
+        user_no_item_train = np.sum(np.ediff1d(warm_urm.indptr) == 0)
+
+        if user_no_item_train != 0:
+            print("Warning: {} ({:.2f} %) of {} users have no Train items".format(user_no_item_train,
+                                                                                  user_no_item_train / n_users * 100,
+                                                                                  n_users))
+
+        return warm_urm
+
+
+    def create_weight_age_matrix(self):
+        age_df = pd.read_csv('Data/data_UCM_age.csv')
+        list_user = np.array(age_df['row'])
+        list_age = np.array(age_df['col'])
+
+        n_user = len(list_user)
+
+        shape = self.urm.shape[0]
+
+        weight_matrix_builder = IncrementalSparseMatrix(auto_create_row_mapper=False, n_rows=shape,
+                                                    auto_create_col_mapper=False, n_cols=shape)
+
+        for index_1 in tqdm(np.arange(n_user)):
+
+            user_1 = list_user[index_1]
+
+            list_weight = np.zeros(n_user)
+            for index_2 in np.arange(n_user):
+                list_weight[index_2] = abs(list_age[index_1] - list_age[index_2])
+                # weight = self.compute_age_similarity(list_age[index_1], list_age[index_2])
+
+            list_weight = list_weight / 10
+            list_weight = np.negative(list_weight)
+            list_weight = np.exp(list_weight)
+
+        weight_matrix_builder.add_data_lists([user_1] * len(list_user), list_user, list_weight)
+
+        weight_matrix = weight_matrix_builder.get_SparseMatrix()
+
+        weight_matrix = sps.csr_matrix(weight_matrix)
+
+        return weight_matrix

@@ -200,6 +200,12 @@ def split_train_leave_k_out_user_wise(URM, k_out = 1, use_validation_set = False
                 user_interaction_data = URM.data[start_user_position:end_user_position][sort_interaction_index]
 
                 # Test interactions
+
+            # if len(user_profile) < 3:
+            #     k_out = 1
+            # else:
+            #     k_out = int(0.2*len(user_profile))
+
             user_interaction_items_test = user_interaction_items[0:k_out]
             user_interaction_data_test = user_interaction_data[0:k_out]
 
@@ -238,5 +244,7 @@ def split_train_leave_k_out_user_wise(URM, k_out = 1, use_validation_set = False
 
 
     return URM_train, URM_test
+
+
 
 

@@ -115,9 +115,9 @@ class Compute_Similarity:
         return self.compute_similarity_object.compute_similarity(**args)
 
 
-#
-#
-#
+
+
+
 #
 # class Compute_Similarity:
 #

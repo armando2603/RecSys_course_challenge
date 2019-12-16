@@ -20,29 +20,30 @@ class HybridWarmRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_1.fit(topK=20, shrink=30)
 
         recommender_2 = SLIM_BPR_Cython(URM_train)
-        recommender_2.fit(epochs=60, lambda_i=0.0297, lambda_j=0.0188, learning_rate=0.008083, topK=202)
-        #
+        recommender_2.fit(epochs=65, lambda_i = 0.01, lambda_j = 0.001, learning_rate = 1e-4, topK = 200)
+
+
         # recommender_3 = TopPop(URM_train)
         # recommender_3.fit()
 
 
         self.URM_train = check_matrix(URM_train.copy(), 'csr')
         self.recommender_1 = recommender_1
-        # self.recommender_2 = recommender_2
+        self.recommender_2 = recommender_2
         # self.recommender_3 = recommender_3
 
-    def fit(self, alpha=.3, beta=.03, gamma=0):
+    def fit(self, alpha=0.3, beta=0.03, gamma=0):
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
 
     def _compute_item_score(self, user_id_array, items_to_compute):
         item_weights_1 = self.recommender_1._compute_item_score(user_id_array)
-        # item_weights_2 = self.recommender_2._compute_item_score(user_id_array)
+        item_weights_2 = self.recommender_2._compute_item_score(user_id_array)
         # item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
 
         item_weights = item_weights_1 * self.alpha
-        # item_weights += item_weights_2 * self.beta
+        item_weights += item_weights_2 * (1-self.alpha)
         # item_weights += item_weights_3 * self.gamma
 
         return item_weights

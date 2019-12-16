@@ -25,16 +25,16 @@ class HybridZeroRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_1 = TopPop(urm_train)
         recommender_1.fit()
 
-        recommender1 = UserKNNCFRecommender(urm_train)
-        recommender1.fit(topK=330, shrink=5)
+        # recommender1 = UserKNNCFRecommender(urm_train)
+        # recommender1.fit(topK=330, shrink=5)
 
-        # recommender2 = UserKNNCBFRecommender(urm_train, ucm_all)
-        # recommender2.fit(shrink=5, topK=400)
+        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
+        recommender_2.fit(shrink=5, topK=400)
 
-        sparse_matrix = scipy.sparse.load_npz('Data/csr_matrix_age.npz')
-
-        recommender_2 = UserSimilarityHybridRecommender(urm_train, recommender1.W_sparse, sparse_matrix)
-        recommender_2.fit(alpha=0.93)
+        # sparse_matrix = scipy.sparse.load_npz('Data/csr_matrix_age.npz')
+        #
+        # recommender_2 = UserSimilarityHybridRecommender(urm_train, recommender1.W_sparse, sparse_matrix)
+        # recommender_2.fit(alpha=0.93)
 
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2

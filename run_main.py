@@ -41,7 +41,7 @@ urm_train = Data.get_urm()
 valid = True
 
 
-sparse_matrix = scipy.sparse.load_npz('Data/csr_matrix_age.npz')
+# sparse_matrix = scipy.sparse.load_npz('Data/csr_matrix_age.npz')
 
 if test:
     urm_train, urm_test = split_train_leave_k_out_user_wise(urm_train, threshold=threshold, temperature=temperature)
@@ -139,12 +139,31 @@ if temperature == 'normal' and test is True:
     # pyplot.xlabel('alpha')
     # pyplot.show()
 
+    earlystopping_keywargs = {"validation_every_n": 5,
+                              "stop_on_validation": True,
+                              "evaluator_object": evaluator_test,
+                              "lower_validations_allowed": 2,
+                              "validation_metric": "MAP"
+                              }
+
+    recommender = SLIM_BPR_Cython(urm_train)
+    recommender.fit(epochs=60, lambda_i=0.0297, lambda_j=0.0188, learning_rate=0.008083, topK=202, **earlystopping_keywargs)
+
+    res = recommender.best_validation_metric
+    n_epochs = recommender.epochs_best
+
+    recommender = SLIM_BPR_Cython(urm_train)
+    recommender.fit(epochs=n_epochs, lambda_i=0.0297, lambda_j=0.0188, learning_rate=0.008083, topK=202)
 
 
 
 
-    recommender = ItemKNNCFRecommender(urm_train)
-    recommender.fit(shrink=30, topK=20)
+
+
+
+
+    # recommender = ItemKNNCFRecommender(urm_train)
+    # recommender.fit(shrink=30, topK=20)
 
 
 
@@ -172,9 +191,9 @@ if test:
     if temperature == 'normal':
         result, str_result = evaluator_test.evaluateRecommender(normal_recommender)
         print('The Map of test is : {}'.format(result[10]['MAP']))
-        if valid:
-            result, str_result = evaluator_valid.evaluateRecommender(normal_recommender)
-            print('The Map of valid is : {}'.format(result[10]['MAP']))
+        # if valid:
+        #     result, str_result = evaluator_valid.evaluateRecommender(normal_recommender)
+        #     print('The Map of valid is : {}'.format(result[10]['MAP']))
         # res_test = evaluate(urm_test, normal_recommender)
         # print(res_test)
 

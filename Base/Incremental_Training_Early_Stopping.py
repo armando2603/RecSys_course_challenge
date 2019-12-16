@@ -159,9 +159,6 @@ class Incremental_Training_Early_Stopping(object):
                (evaluator_object is not None and stop_on_validation and validation_every_n is not None and validation_metric is not None and lower_validations_allowed is not None),\
             "{}: Inconsistent parameters passed, please check the supported uses".format(algorithm_name)
 
-
-
-
         start_time = time.time()
 
         self.best_validation_metric = None

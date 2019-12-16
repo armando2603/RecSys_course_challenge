@@ -22,38 +22,44 @@ from Base.Evaluation.Evaluator import EvaluatorHoldout
 Data = DataManager()
 
 
-urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), use_validation_set=False, leave_random_out=True)
+urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm())
 
-# urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, use_validation_set=False, leave_random_out=True)
+urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid')
 
 # urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
 # urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
-# evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
+evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
 recommender = SLIM_BPR_Cython(urm_train)
 earlystopping_keywargs = {"validation_every_n": 5,
                               "stop_on_validation": True,
-                              "evaluator_object": evaluator_test,
+                              "evaluator_object": evaluator_valid,
                               "lower_validations_allowed": 2,
                               "validation_metric": "MAP"
                           }
 tuning_params = dict()
 tuning_params = {
-    "L1": (0.0001, 0.1),
-    "L2": (0.0001, 0.1),
-    "LE": (0.00001, 0.1),
-    "NN": (150, 220),
-    # "SH": (1, 10)
+    "L1": (0.0001, 0.5),
+    "L2": (0.0001, 0.5),
+    "LE": (0.000001, 0.1),
+    "NN": (150, 250),
+    "Epochs": (0, 200)
  }
 
 
 def search_param(**tuning_params):
     recommender.fit(epochs=100, topK=int(tuning_params['NN']), lambda_i=tuning_params['L1'],
                     lambda_j=tuning_params['L2'], learning_rate=tuning_params['LE'], **earlystopping_keywargs)
-    # recommender.fit(topK=int(tuning_params['NN']), shrink=tuning_params['SH'])
-    res_test, str = evaluator_test.evaluateRecommender(recommender)
-    # res_test = evaluate(urm_test, recommender)
+
+    if recommender.epochs_best == 100:
+        res_test, str = evaluator_test.evaluateRecommender(recommender)
+    else:
+        tuning_params['Epochs'] = recommender.epochs_best
+        recommender.fit(epochs=tuning_params['Epochs'], topK=int(tuning_params['NN']), lambda_i=tuning_params['L1'],
+                        lambda_j=tuning_params['L2'], learning_rate=tuning_params['LE'], **earlystopping_keywargs)
+        res_test, str = evaluator_test.evaluateRecommender(recommender)
+
     return res_test[10]["MAP"]
 
 
@@ -73,9 +79,9 @@ optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 optimizer.probe(
     params={
     "NN": 201,
-    "LE": 0.008,
-    "L1": 0.02975,
-    "L2": 0.01885},
+    "LE": 0.0001,
+    "L1": 0.01,
+    "L2": 0.001},
     lazy=True,
 )
 

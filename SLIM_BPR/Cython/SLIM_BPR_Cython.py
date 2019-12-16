@@ -174,7 +174,6 @@ class SLIM_BPR_Cython(BaseItemSimilarityMatrixRecommender, Incremental_Training_
 
 
 
-
     def _prepare_model_for_validation(self):
         self.get_S_incremental_and_set_W()
 

@@ -36,7 +36,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
                           noise = 1e-5,
                           acq_func = 'gp_hedge',
                           acq_optimizer = 'auto',
-                          random_state = None,
+                          random_state = 2019,
                           verbose = True,
                           n_restarts_optimizer = 10,
                           xi = 0.01,

@@ -37,7 +37,7 @@ class IALSRecommender(BaseMatrixFactorizationRecommender, Incremental_Training_E
     AVAILABLE_CONFIDENCE_SCALING = ["linear", "log"]
 
 
-    def fit(self, epochs = 300,
+    def fit(self, epochs = 100,
             num_factors = 20,
             confidence_scaling = "linear",
             alpha = 1.0,

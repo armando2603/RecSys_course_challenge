@@ -20,7 +20,7 @@ class HybridWarmRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_1.fit(topK=20, shrink=30)
 
         recommender_2 = SLIM_BPR_Cython(URM_train)
-        recommender_2.fit(epochs=65, lambda_i = 0.01, lambda_j = 0.001, learning_rate = 1e-4, topK = 200)
+        recommender_2.fit(epochs=40, lambda_i = 0.01, lambda_j = 0.001, learning_rate = 1e-4, topK = 200)
 
 
         # recommender_3 = TopPop(URM_train)

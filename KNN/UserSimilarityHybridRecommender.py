@@ -8,7 +8,9 @@ Created on 15/04/18
 
 from Base.Recommender_utils import check_matrix, similarityMatrixTopK
 from Base.BaseSimilarityMatrixRecommender import BaseUserSimilarityMatrixRecommender
-
+from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
+from KNN.UserKNNCFRecommender import UserKNNCFRecommender
+import scipy.sparse
 
 
 class UserSimilarityHybridRecommender(BaseUserSimilarityMatrixRecommender):
@@ -20,8 +22,9 @@ class UserSimilarityHybridRecommender(BaseUserSimilarityMatrixRecommender):
     RECOMMENDER_NAME = "UserSimilarityHybridRecommender"
 
 
-    def __init__(self, URM_train, Similarity_1, Similarity_2, verbose = True):
-        super(UserSimilarityHybridRecommender, self).__init__(URM_train, verbose = verbose)
+    def __init__(self, urm_train, Similarity_1, Similarity_2, verbose = True):
+        super(UserSimilarityHybridRecommender, self).__init__(urm_train, verbose = verbose)
+
 
         if Similarity_1.shape != Similarity_2.shape:
             raise ValueError("UserSimilarityHybridRecommender: similarities have different size, S1 is {}, S2 is {}".format(

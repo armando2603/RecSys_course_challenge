@@ -23,9 +23,9 @@ def split_train_leave_k_out_user_wise(URM, k_out = 1, use_validation_set = False
     :return:
     """
 
-    temperature_values = ["cold", "warm", "zero", "normal", 'valid']
+    temperature_values = ["cold", "warm", "zero", "normal", 'valid', 'zero2']
 
-    assert temperature in temperature_values, 'temperature must be "cold", "warm", "valid", "zero" or "normal"'
+    assert temperature in temperature_values, 'temperature must be "cold", "warm", "zero2", "valid", "zero" or "normal"'
     assert k_out > 0, "k_out must be a value greater than 0, provided was '{}'".format(k_out)
 
     URM = sps.csr_matrix(URM)
@@ -172,6 +172,51 @@ def split_train_leave_k_out_user_wise(URM, k_out = 1, use_validation_set = False
 
                 URM_train_builder.add_data_lists([user_id] * len(user_interaction_items_train),
                                                  user_interaction_items_train, user_interaction_data_train)
+            else:
+                user_interaction_items_train = user_profile
+                user_interaction_data_train = URM.data[start_user_position:end_user_position]
+
+                URM_train_builder.add_data_lists([user_id] * len(user_interaction_items_train),
+                                                 user_interaction_items_train, user_interaction_data_train)
+
+
+        if temperature == 'zero2':
+
+            if len(user_profile) == 2:
+                if leave_random_out:
+                    indices_to_suffle = np.arange(len(user_profile), dtype=np.int)
+
+                    np.random.shuffle(indices_to_suffle)
+
+                    user_interaction_items = user_profile[indices_to_suffle]
+                    user_interaction_data = URM.data[start_user_position:end_user_position][indices_to_suffle]
+
+                else:
+
+                    # The first will be sampled so the last interaction must be the first one
+                    interaction_position = URM.data[start_user_position:end_user_position]
+
+                    sort_interaction_index = np.argsort(-interaction_position)
+
+                    user_interaction_items = user_profile[sort_interaction_index]
+                    user_interaction_data = URM.data[start_user_position:end_user_position][sort_interaction_index]
+
+                # Test interactions
+                user_interaction_items_test = user_interaction_items[0:k_out]
+                user_interaction_data_test = user_interaction_data[0:k_out]
+
+                URM_test_builder.add_data_lists([user_id] * len(user_interaction_items_test),
+                                                user_interaction_items_test,
+                                                user_interaction_data_test)
+
+
+
+                # Train interactions
+                # user_interaction_items_train = user_interaction_items[k_out:]
+                # user_interaction_data_train = user_interaction_data[k_out:]
+                #
+                # URM_train_builder.add_data_lists([user_id] * len(user_interaction_items_train),
+                #                                  user_interaction_items_train, user_interaction_data_train)
             else:
                 user_interaction_items_train = user_profile
                 user_interaction_data_train = URM.data[start_user_position:end_user_position]

@@ -29,15 +29,15 @@ parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
                                  evaluator_test=evaluator_test)
 
-earlystopping_keywargs = {"validation_every_n": 5,
+earlystopping_keywargs = {"validation_every_n": 2,
                               "stop_on_validation": True,
                               "evaluator_object": evaluator_valid,
-                              "lower_validations_allowed": 2,
+                              "lower_validations_allowed": 1,
                               "validation_metric": "MAP"
                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["num_factors"] = Integer(50, 200)
+hyperparameters_range_dictionary["num_factors"] = Integer(100, 200)
 hyperparameters_range_dictionary["alpha"] = Integer(0, 40)
 hyperparameters_range_dictionary["reg"] = Real(0.01, 0.5)
 
@@ -46,7 +46,7 @@ recommender_input_args = SearchInputRecommenderArgs(
     CONSTRUCTOR_POSITIONAL_ARGS=[urm_train],
     CONSTRUCTOR_KEYWORD_ARGS={},
     FIT_POSITIONAL_ARGS=[],
-    FIT_KEYWORD_ARGS={**earlystopping_keywargs}
+    FIT_KEYWORD_ARGS={'epochs':20,**earlystopping_keywargs}
 )
 
 output_folder_path = "result_experiments/"
@@ -57,7 +57,7 @@ import os
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path)
 
-n_cases = 2
+n_cases = 20
 metric_to_optimize = "MAP"
 
 parameterSearch.search(recommender_input_args,

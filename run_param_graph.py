@@ -10,6 +10,8 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactoriz
 from Notebooks_utils.data_splitter import train_test_holdout
 from Base.Evaluation.Evaluator import EvaluatorHoldout
 from MatrixFactorization.IALSRecommender import IALSRecommender
+from GraphBased.P3alphaRecommender import P3alphaRecommender
+from GraphBased.RP3betaRecommender import  RP3betaRecommender
 from ParameterTuning.SearchBayesianSkopt import SearchBayesianSkopt
 from ParameterTuning.SearchAbstractClass import SearchInputRecommenderArgs
 from skopt.space import Real, Integer, Categorical
@@ -25,7 +27,7 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = ItemKNNCFRecommender
+recommender = RP3betaRecommender
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
@@ -39,10 +41,11 @@ parameterSearch = SearchBayesianSkopt(recommender,
 #                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["topK"] = Integer(5, 50)
-hyperparameters_range_dictionary["shrink"] = Integer(0, 50)
-hyperparameters_range_dictionary["similarity"] = Categorical(["cosine", "jaccard", "adjusted"])
-hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
+hyperparameters_range_dictionary["topK"] = Integer(5, 100)
+hyperparameters_range_dictionary["alpha"] = Real(0, 2)
+hyperparameters_range_dictionary["beta"] = Real(0, 2)
+# hyperparameters_range_dictionary["similarity"] = Categorical(["cosine", "jaccard", "adjusted"])
+hyperparameters_range_dictionary["normalize_similarity"] = Categorical([True, False])
 
 
 recommender_input_args = SearchInputRecommenderArgs(
@@ -71,43 +74,4 @@ parameterSearch.search(recommender_input_args,
                        output_file_name_root = recommender.RECOMMENDER_NAME,
                        metric_to_optimize = metric_to_optimize
                       )
-
-
-# def search_param(**tuning_params):
-#     # recommender.fit(epochs=400, topK=int(tuning_params['NN']), lambda_i=tuning_params['L1'],
-#     #                 lambda_j=tuning_params['L2'], learning_rate=tuning_params['LE'], **earlystopping_keywargs)
-#     recommender.fit(epochs=30, alpha=tuning_params['A'], num_factors=int(tuning_params['NF']), reg=tuning_params['REG'], **earlystopping_keywargs)
-#     #res_test, str = evaluator_test.evaluateRecommender(recommender)
-#     res_test, str = evaluator_valid.evaluateRecommender(recommender)
-#     return res_test[10]["MAP"]
-
-# optimizer = BayesianOptimization(
-#     f=search_param,
-#     pbounds=tuning_params,
-#     verbose=3,
-#     random_state=5,
-# )
-
-#load_logs(optimizer, logs=["./logs.json"])
-
-#
-# logger = JSONLogger(path="./Logs/tmp/" + recommender.RECOMMENDER_NAME + ".json")
-# optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
-#
-# optimizer.probe(
-#     params={
-#     'A': 5.0,
-#     'NF': 99.9773715259928,
-#     'REG': 0.0189810660740337},
-#     lazy=True,
-# )
-
-
-#
-# optimizer.maximize(
-#     init_points=15,
-#     n_iter=50,
-# )
-#
-# print(optimizer.max)
 

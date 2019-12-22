@@ -14,6 +14,7 @@ from ParameterTuning.SearchBayesianSkopt import SearchBayesianSkopt
 from ParameterTuning.SearchAbstractClass import SearchInputRecommenderArgs
 from skopt.space import Real, Integer, Categorical
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
+from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 import numpy as np
 
 
@@ -25,7 +26,7 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = ItemKNNCFRecommender
+recommender = UserKNNCBFRecommender
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
@@ -39,14 +40,15 @@ parameterSearch = SearchBayesianSkopt(recommender,
 #                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["topK"] = Integer(5, 50)
-hyperparameters_range_dictionary["shrink"] = Integer(0, 50)
-hyperparameters_range_dictionary["similarity"] = Categorical(["cosine", "jaccard", "adjusted"])
+hyperparameters_range_dictionary["topK"] = Integer(5, 1700)
+hyperparameters_range_dictionary["shrink"] = Integer(0, 1000)
+hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "TF-IDF", "none"])
+hyperparameters_range_dictionary["similarity"] = Categorical(["adjusted", "jaccard", "cosine", "pearson", "tanimoto"])
 hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
 
-
+ucm_age, ucm_region, ucm_all = Data.get_ucm()
 recommender_input_args = SearchInputRecommenderArgs(
-    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train],
+    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train, ucm_all],
     CONSTRUCTOR_KEYWORD_ARGS={},
     FIT_POSITIONAL_ARGS=[],
     FIT_KEYWORD_ARGS={}
@@ -60,12 +62,12 @@ import os
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path)
 
-n_cases = 200
+n_cases = 300
 metric_to_optimize = "MAP"
 parameterSearch.search(recommender_input_args,
                        parameter_search_space = hyperparameters_range_dictionary,
                        n_cases = n_cases,
-                       n_random_starts = 5,
+                       n_random_starts = 10,
                        save_model = "best",
                        output_folder_path = output_folder_path,
                        output_file_name_root = recommender.RECOMMENDER_NAME,

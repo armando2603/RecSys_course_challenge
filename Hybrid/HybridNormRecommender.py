@@ -7,6 +7,7 @@ from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 from KNN.UserSimilarityHybridRecommender import UserSimilarityHybridRecommender
 from Hybrid.HybridGenRecommender import HybridGenRecommender
+from GraphBased.RP3betaRecommender import RP3betaRecommender
 
 
 class HybridNormRecommender(BaseItemSimilarityMatrixRecommender):
@@ -31,24 +32,32 @@ class HybridNormRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_3 = UserKNNCFRecommender(urm_train)
         recommender_3.fit(shrink=2, topK=600, normalize=True)
 
+        recommender_4 = RP3betaRecommender(urm_train)
+        recommender_4.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
+
 
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2
         self.recommender_3 = recommender_3
+        self.recommender_4 = recommender_4
 
 
-    def fit(self, alpha=0.2, beta=0.8, gamma=0.2):
+    def fit(self, alpha=0.2, beta=0.8, gamma=0.012, phi=1.2):
+        # alpha=0.2, beta=0.8, gamma=0.012, phi=1.2
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
+        self.phi = phi
 
     def _compute_item_score(self, user_id_array, items_to_compute=None):
         item_weights_1 = self.recommender_1._compute_item_score(user_id_array)
         item_weights_2 = self.recommender_2._compute_item_score(user_id_array)
         item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
+        item_weights_4 = self.recommender_4._compute_item_score(user_id_array)
 
         item_weights = item_weights_1 * self.alpha
         item_weights += item_weights_2 * self.beta
         item_weights += item_weights_3 * self.gamma
+        item_weights += item_weights_4 * self.phi
 
         return item_weights

@@ -30,19 +30,20 @@ from Hybrid.HybridWarmRecommender import HybridWarmRecommender
 from KNN.UserSimilarityHybridRecommender import UserSimilarityHybridRecommender
 from Hybrid.HybridGenRecommender import HybridGenRecommender
 from Hybrid.HybridNormRecommender import HybridNormRecommender
+from GraphBased.RP3betaRecommender import RP3betaRecommender
 
 data_folder = Path(__file__).parent.absolute()
 
 test = True
 threshold = 2
-temperature = 'zero'
+temperature = 'normal'
 Data = DataManager()
 urm_train = Data.get_urm()
 
 valid = True
 
 
-sparse_matrix = scipy.sparse.load_npz('Data/csr_matrix_age.npz')
+# sparse_matrix = scipy.sparse.load_npz('Data/csr_matrix_age.npz')
 
 if test:
     urm_train, urm_test = split_train_leave_k_out_user_wise(urm_train, threshold=threshold, temperature=temperature)
@@ -51,7 +52,7 @@ if test:
     # urm_train, urm_test = train_test_holdout(Data.get_urm(), train_perc=0.8)
     # urm_train, urm_valid = train_test_holdout(urm_train, train_perc=0.8)
     if valid:
-        urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=threshold, temperature='zero2')
+        urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=threshold, temperature='valid')
         evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
     evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 else:
@@ -80,12 +81,18 @@ if temperature == 'cold' or test is False:
 
     # recommender = HybridWarmRecommender(urm_train)
     # recommender.fit(alpha=0.95)
+
     # recommender = ItemKNNCFRecommender(urm_train)
-    # recommender.fit(shrink=20, topK=10)
+    # recommender.fit(shrink=29, topK=6, similarity='jaccard')
 
     recommender = HybridNormRecommender(urm_train, ucm_all, icm_all)
-    recommender.fit(gamma=0.012)
+    recommender.fit()
 
+    # recommender = RP3betaRecommender(urm_train)
+    # recommender.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
+
+    # recommender = HybridNormRecommender(urm_train, ucm_all, icm_all)
+    # recommender.fit(phi=1.2)
 
     cold_recommender = recommender
 
@@ -121,6 +128,9 @@ if temperature == 'zero' or test is False:
     recommender = HybridZeroRecommender(urm_train, ucm_all)
     recommender.fit(alpha=0)
 
+    # recommender = UserKNNCBFRecommender(urm_train, ucm_all)
+    # recommender.fit(shrink=979, topK=1677, similarity='jaccard')
+
     zero_recommender = recommender
 
 if temperature == 'warm' or test is False:
@@ -138,17 +148,18 @@ if temperature == 'normal' and test is True:
     icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
     ucm_age, ucm_region, ucm_all = Data.get_ucm()
 
-    # x_tick = np.arange(start=0, stop=0.0101, step=0.001)
+    # x_tick = np.arange(start=0.8, stop=1.81, step=0.1)
     # MAP_per_k_test = []
     #
     # MAP_per_k_valid = []
+    #
     # recommender = HybridNormRecommender(urm_train, ucm_all, icm_all)
     #
     # best_alpha = 0
     # best_res = 0
     # for alpha in x_tick:
     #
-    #     recommender.fit(gamma=alpha)
+    #     recommender.fit(phi=alpha)
     #
     #     result_dict, res_str = evaluator_valid.evaluateRecommender(recommender)
     #     MAP_per_k_valid.append(result_dict[10]["MAP"])
@@ -179,13 +190,20 @@ if temperature == 'normal' and test is True:
     # res = recommender.best_validation_metric
     # n_epochs = recommender.epochs_best
 
-    # recommender = UserKNNCFRecommender(urm_train)
-    # recommender.fit(shrink=100, topK=600, normalize=True, feature_weighting='TF-IDF')
+    # recommender = UserKNNCBFRecommender(urm_train, ucm_all)
+    # recommender.fit(shrink=979, topK=1677, similarity='jaccard')
+
+    # recommender = ItemKNNCFRecommender(urm_train)
+    # recommender.fit(shrink=26, topK=5, similarity='jaccard')
 
     recommender = HybridNormRecommender(urm_train, ucm_all, icm_all)
-    recommender.fit(gamma=0.012)
+    recommender.fit()
 
+    # recommender = ItemKNNCFRecommender(urm_train)
+    # recommender.fit(shrink=29, topK=6, similarity='jaccard')
 
+    # recommender = RP3betaRecommender(urm_train)
+    # recommender.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
     normal_recommender = recommender
 
 if test:
@@ -233,4 +251,4 @@ else:
         recommended_list.append(items_strings)
 
     submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-    submission.to_csv(data_folder / 'Data/Submissions/20-12_submission.csv', index=False)
+    submission.to_csv(data_folder / 'Data/Submissions/22-12_submission.csv', index=False)

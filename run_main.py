@@ -199,6 +199,8 @@ if temperature == 'normal' and test is True:
     recommender = HybridNormRecommender(urm_train, ucm_all, icm_all)
     recommender.fit()
 
+    recommender = IALSRecommender
+
     # recommender = ItemKNNCFRecommender(urm_train)
     # recommender.fit(shrink=29, topK=6, similarity='jaccard')
 

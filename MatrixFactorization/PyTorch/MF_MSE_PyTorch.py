@@ -44,6 +44,8 @@ class MF_MSE_PyTorch(BaseMatrixFactorizationRecommender, Incremental_Training_Ea
         self.W = None
         self.H_best = None
         self.W_best = None
+        self.W_incremental = None
+        self.H_incremental = None
 
         self.positive_threshold = positive_threshold
 
@@ -103,12 +105,15 @@ class MF_MSE_PyTorch(BaseMatrixFactorizationRecommender, Incremental_Training_Ea
         self.pyTorchModel = MF_MSE_PyTorch_model(n_users, n_items, self.n_factors).to(self.device)
 
         #Choose loss
-        self.lossFunction = torch.nn.MSELoss(size_average=False)
+        self.lossFunction = torch.nn.MSELoss()
         #self.lossFunction = torch.nn.BCELoss(size_average=False)
-        self.optimizer = torch.optim.Adagrad(self.pyTorchModel.parameters(), lr = self.learning_rate)
+        self.optimizer = torch.optim.SGD(self.pyTorchModel.parameters(), lr = self.learning_rate)
 
 
         dataset_iterator = DatasetIterator_URM(self.URM_train)
+
+        self._initialize_incremental_model()
+
 
         self.train_data_loader = DataLoader(dataset = dataset_iterator,
                                        batch_size = self.batch_size,
@@ -123,9 +128,10 @@ class MF_MSE_PyTorch(BaseMatrixFactorizationRecommender, Incremental_Training_Ea
                                         algorithm_name=self.RECOMMENDER_NAME,
                                         **earlystopping_kwargs)
 
+        self._update_incremental_model()
 
-        self.ITEM_factors = self.W_best
-        self.USER_factors = self.H_best
+        self.ITEM_factors = self.H_best
+        self.USER_factors = self.W_best
 
         self._print("Computing NMF decomposition... Done!")
         
@@ -154,9 +160,10 @@ class MF_MSE_PyTorch(BaseMatrixFactorizationRecommender, Incremental_Training_Ea
 
     def _update_best_model(self):
 
-        self.W_best = self.W_incremental.copy()
-        self.H_best = self.H_incremental.copy()
-
+        self.W_best = self.pyTorchModel.get_W()
+        self.H_best = self.pyTorchModel.get_H()
+        # self.W_best = self.pyTorchModel.get_W()
+        # self.H_best = self.pyTorchModel.get_H()
 
 
     def _run_epoch(self, num_epoch):
@@ -191,6 +198,6 @@ class MF_MSE_PyTorch(BaseMatrixFactorizationRecommender, Incremental_Training_Ea
         :return:
         """
 
-        self.ITEM_factors = self.pyTorchModel.get_W()
-        self.USER_factors = self.pyTorchModel.get_H()
+        self.ITEM_factors = self.pyTorchModel.get_H()
+        self.USER_factors = self.pyTorchModel.get_W()
 

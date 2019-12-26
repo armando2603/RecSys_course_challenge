@@ -28,33 +28,36 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = ItemKNNCBFRecommender
+recommender = SLIM_BPR_Cython
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
                                  evaluator_test=evaluator_test)
 
-# earlystopping_keywargs = {"validation_every_n": 5,
-#                               "stop_on_validation": True,
-#                               "evaluator_object": evaluator_valid,
-#                               "lower_validations_allowed": 2,
-#                               "validation_metric": "MAP"
-#                           }
+earlystopping_keywargs = {"validation_every_n": 5,
+                              "stop_on_validation": True,
+                              "evaluator_object": evaluator_valid,
+                              "lower_validations_allowed": 2,
+                              "validation_metric": "MAP"
+                          }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["topK"] = Integer(5, 100)
-hyperparameters_range_dictionary["shrink"] = Integer(0, 500)
-hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none"])
-hyperparameters_range_dictionary["similarity"] = Categorical(["jaccard", "cosine", "tanimoto", "tversky"])
-hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
+hyperparameters_range_dictionary["topK"] = Integer(5, 500)
+# hyperparameters_range_dictionary["shrink"] = Integer(0, 500)
+# hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none"])
+# hyperparameters_range_dictionary["similarity"] = Categorical(["jaccard", "cosine", "tanimoto", "tversky"])
+hyperparameters_range_dictionary["symmetric"] = Categorical([True, False])
+hyperparameters_range_dictionary["sgd_mode"] = Categorical(["adam", "rmsprop"])
+hyperparameters_range_dictionary["lambda_i"] = Real(0.00001, 0.1)
+hyperparameters_range_dictionary["lambda_j"] = Real(0.00001, 0.1)
+hyperparameters_range_dictionary["learning_rate"] = Real(0.00001, 0.05)
 
-ucm_age, ucm_region, ucm_all = Data.get_ucm()
-icm_weighted = sps.load_npz(data_folder / "Data/icm_weighted.npz")
+
 recommender_input_args = SearchInputRecommenderArgs(
-    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train, icm_weighted],
+    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train],
     CONSTRUCTOR_KEYWORD_ARGS={},
     FIT_POSITIONAL_ARGS=[],
-    FIT_KEYWORD_ARGS={}
+    FIT_KEYWORD_ARGS={**earlystopping_keywargs}
 )
 
 output_folder_path = "result_experiments/"

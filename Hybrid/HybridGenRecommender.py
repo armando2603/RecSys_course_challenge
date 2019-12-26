@@ -6,6 +6,7 @@ from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 from KNN.UserSimilarityHybridRecommender import UserSimilarityHybridRecommender
+from DataManager.DataManager import DataManager
 
 class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
     """ HybridGenRecommender
@@ -15,10 +16,14 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
 
     RECOMMENDER_NAME = "HybridGenRecommender"
 
-    def __init__(self, urm_train, ucm_all, icm_all):
+    def __init__(self, urm_train):
         super(HybridGenRecommender, self).__init__(urm_train)
 
+        data = DataManager()
+
         urm_train = check_matrix(urm_train.copy(), 'csr')
+        icm_price, icm_asset, icm_sub, icm_all = data.get_icm()
+        ucm_age, ucm_region, ucm_all = data.get_ucm()
 
         recommender_1 = ItemKNNCBFRecommender(urm_train, icm_all)
         recommender_1.fit(shrink=40, topK=20, feature_weighting='BM25')
@@ -34,7 +39,7 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
         # self.recommender_3 = recommender_3
 
 
-    def fit(self, alpha=.3, beta=.03, gamma=0):
+    def fit(self, alpha=0.2, beta=0.03, gamma=0):
         self.alpha = alpha
         # self.beta = beta
         # self.gamma = gamma

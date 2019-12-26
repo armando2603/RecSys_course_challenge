@@ -52,7 +52,7 @@ class LighFMRecommender(BaseItemSimilarityMatrixRecommender):
                                             np.arange(n_items),
                                             item_features=self.icm,
                                             user_features=self.ucm,
-                                            num_threads=3)
+                                            num_threads=4)
             item_weights[index] = user_score
             index += 1
         return item_weights

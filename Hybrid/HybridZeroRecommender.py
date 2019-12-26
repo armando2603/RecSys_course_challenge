@@ -7,7 +7,7 @@ from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 from KNN.UserSimilarityHybridRecommender import UserSimilarityHybridRecommender
 import scipy.sparse
-
+from DataManager.DataManager import DataManager
 
 class HybridZeroRecommender(BaseItemSimilarityMatrixRecommender):
     """ HybridZeroRecommender
@@ -17,24 +17,20 @@ class HybridZeroRecommender(BaseItemSimilarityMatrixRecommender):
 
     RECOMMENDER_NAME = "HybridZeroRecommender"
 
-    def __init__(self, urm_train, ucm_all):
+    def __init__(self, urm_train):
         super(HybridZeroRecommender, self).__init__(urm_train)
 
         urm_train = check_matrix(urm_train.copy(), 'csr')
 
+        data = DataManager()
+
+        ucm_age, ucm_region, ucm_all = data.get_ucm()
+
         recommender_1 = TopPop(urm_train)
         recommender_1.fit()
-
-        # recommender_2 = UserKNNCFRecommender(urm_train)
-        # recommender_2.fit(shrink=2, topK=600, normalize=True)
-
-        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
-        recommender_2.fit(shrink=500, topK=1600, normalize=True)
-
-        # sparse_matrix = scipy.sparse.load_npz('Data/csr_matrix_age.npz')
         #
-        # recommender_2 = UserSimilarityHybridRecommender(urm_train, recommender1.W_sparse, sparse_matrix)
-        # recommender_2.fit(alpha=0.93)
+        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
+        recommender_2.fit(shrink=500, topK=1600, similarity='tversky')
 
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2

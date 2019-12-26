@@ -14,9 +14,11 @@ from ParameterTuning.SearchBayesianSkopt import SearchBayesianSkopt
 from ParameterTuning.SearchAbstractClass import SearchInputRecommenderArgs
 from skopt.space import Real, Integer, Categorical
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
+from KNN.ItemKNNCBFRecommender import ItemKNNCBFRecommender
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
+from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 import numpy as np
-
+import scipy.sparse as sps
 
 Data = DataManager()
 
@@ -26,7 +28,7 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = UserKNNCBFRecommender
+recommender = ItemKNNCBFRecommender
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
@@ -40,15 +42,16 @@ parameterSearch = SearchBayesianSkopt(recommender,
 #                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["topK"] = Integer(5, 1700)
-hyperparameters_range_dictionary["shrink"] = Integer(0, 1000)
-hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "TF-IDF", "none"])
-hyperparameters_range_dictionary["similarity"] = Categorical(["adjusted", "jaccard", "cosine", "pearson", "tanimoto"])
+hyperparameters_range_dictionary["topK"] = Integer(5, 100)
+hyperparameters_range_dictionary["shrink"] = Integer(0, 500)
+hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none"])
+hyperparameters_range_dictionary["similarity"] = Categorical(["jaccard", "cosine", "tanimoto", "tversky"])
 hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
 
 ucm_age, ucm_region, ucm_all = Data.get_ucm()
+icm_weighted = sps.load_npz("Data/icm_weighted.npz")
 recommender_input_args = SearchInputRecommenderArgs(
-    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train, ucm_all],
+    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train, icm_weighted],
     CONSTRUCTOR_KEYWORD_ARGS={},
     FIT_POSITIONAL_ARGS=[],
     FIT_KEYWORD_ARGS={}

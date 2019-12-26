@@ -18,6 +18,7 @@ import numpy as np
 
 
 
+
 class CFW_D_Similarity_Linalg(BaseItemSimilarityMatrixRecommender):
 
     RECOMMENDER_NAME = "CFW_D_Similarity_Linalg"
@@ -33,7 +34,7 @@ class CFW_D_Similarity_Linalg(BaseItemSimilarityMatrixRecommender):
                                                                                                           ICM.shape[0]))
 
         if(S_matrix_target.shape[0] != S_matrix_target.shape[1]):
-            raise ValueError("Items imilarity matrix is not square: rows are {}, columns are {}".format(S_matrix_target.shape[0],
+            raise ValueError("Items similarity matrix is not square: rows are {}, columns are {}".format(S_matrix_target.shape[0],
                                                                                                         S_matrix_target.shape[1]))
 
         if(S_matrix_target.shape[0] != ICM.shape[0]):

@@ -34,14 +34,14 @@ class _MatrixFactorization_Cython(BaseMatrixFactorizationRecommender, Incrementa
             print("Compilation Complete")
 
 
-    def fit(self, epochs=300, batch_size = 1000,
-            num_factors=10, positive_threshold_BPR = None,
-            learning_rate = 0.001, use_bias = True,
+    def fit(self, epochs=30, batch_size = 1,
+            num_factors=280, positive_threshold_BPR = None,
+            learning_rate = 0.0001, use_bias = True,
             sgd_mode='sgd',
             negative_interactions_quota = 0.0,
             init_mean = 0.0, init_std_dev = 0.1,
-            user_reg = 0.0, item_reg = 0.0, bias_reg = 0.0, positive_reg = 0.0, negative_reg = 0.0,
-            random_seed = None,
+            user_reg = 0.03, item_reg = 0.03, bias_reg = 0.0, positive_reg = 0.01, negative_reg = 0.01,
+            random_seed = 2019,
             **earlystopping_kwargs):
 
 

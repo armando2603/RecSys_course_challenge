@@ -11,6 +11,7 @@ from Base.Incremental_Training_Early_Stopping import Incremental_Training_Early_
 from Base.BaseRecommender import BaseRecommender
 import os, sys
 import numpy as np, pickle
+from tqdm import tqdm
 
 
 import torch
@@ -39,6 +40,7 @@ class MF_MSE_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
         self.n_users = URM_train.shape[0]
         self.n_items = URM_train.shape[1]
         self.normalize = False
+
 
         self.positive_threshold = positive_threshold
 
@@ -119,8 +121,8 @@ class MF_MSE_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
                                         **earlystopping_kwargs)
 
 
-        self.ITEM_factors = self.W_best.copy()
-        self.USER_factors = self.H_best.copy()
+        self.ITEM_factors = self.W_best
+        self.USER_factors = self.H_best
 
         self._print("Computing NMF decomposition... Done!")
         
@@ -157,10 +159,8 @@ class MF_MSE_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
     def _run_epoch(self, num_epoch):
 
 
-        for num_batch, (input_data, label) in enumerate(self.train_data_loader, 0):
+        for num_batch, (input_data, label) in tqdm(enumerate(self.train_data_loader, 0)):
 
-            if num_batch % 1000 == 0:
-                print("num_batch: {}".format(num_batch))
 
             # On windows requires int64, on ubuntu int32
             #input_data_tensor = Variable(torch.from_numpy(np.asarray(input_data, dtype=np.int64))).to(self.device)

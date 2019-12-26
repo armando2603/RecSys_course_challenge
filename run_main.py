@@ -32,7 +32,6 @@ from Hybrid.HybridGenRecommender import HybridGenRecommender
 from Hybrid.HybridNormRecommender import HybridNormRecommender
 from GraphBased.RP3betaRecommender import RP3betaRecommender
 from FeatureWeighting.CFW_D_Similarity_Linalg import CFW_D_Similarity_Linalg
-from Utils.s_plus import dot_product
 from Hybrid.HybridNorm1Recommender import HybridNorm1Recommender
 from Hybrid.HybridNorm2Recommender import HybridNorm2Recommender
 from Hybrid.HybridGen2Recommender import HybridGen2Recommender
@@ -227,12 +226,8 @@ if temperature == 'normal' and test is True:
     #
     # recommender.fit(alpha=best_alpha)
 
-    # earlystopping_keywargs = {"validation_every_n": 5,
-    #                           "stop_on_validation": True,
-    #                           "evaluator_object": evaluator_test,
-    #                           "lower_validations_allowed": 2,
-    #                           "validation_metric": "MAP"
-    #                           }
+    earlystopping_keywargs = {"epochs_max": 2
+                              }
     #
     # recommender = SLIM_BPR_Cython(urm_train)
     # recommender.fit(epochs=60, lambda_i=0.0297, lambda_j=0.0188, learning_rate=0.008083, topK=202, **earlystopping_keywargs)

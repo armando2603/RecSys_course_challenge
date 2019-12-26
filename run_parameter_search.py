@@ -49,7 +49,7 @@ hyperparameters_range_dictionary["similarity"] = Categorical(["jaccard", "cosine
 hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
 
 ucm_age, ucm_region, ucm_all = Data.get_ucm()
-icm_weighted = sps.load_npz("Data/icm_weighted.npz")
+icm_weighted = sps.load_npz(data_folder / "Data/icm_weighted.npz")
 recommender_input_args = SearchInputRecommenderArgs(
     CONSTRUCTOR_POSITIONAL_ARGS=[urm_train, icm_weighted],
     CONSTRUCTOR_KEYWORD_ARGS={},

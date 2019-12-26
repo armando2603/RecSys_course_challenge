@@ -241,8 +241,11 @@ class Incremental_Training_Early_Stopping(object):
         # If no validation required, keep the latest
         if evaluator_object is None:
 
-            self._prepare_model_for_validation()
-            self._update_best_model()
+            if algorithm_name == "MF_MSE_PyTorch":
+                self._update_best_model()
+            else:
+                self._prepare_model_for_validation()
+                self._update_best_model()
 
 
         # Stop when max epochs reached and not early-stopping

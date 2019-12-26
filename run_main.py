@@ -48,7 +48,7 @@ urm_train = Data.get_urm()
 valid = True
 
 
-sparse_matrix = sp.load_npz('Data/csr_matrix_age.npz')
+sparse_matrix = sp.load_npz(data_folder / 'Data/csr_matrix_age.npz')
 
 if test:
     urm_train, urm_test = split_train_leave_k_out_user_wise(urm_train, threshold=threshold, temperature=temperature)
@@ -81,7 +81,7 @@ normal_recommender = None
 
 
 if temperature == 'cold' or test is False:
-    # icm_weighted = sp.load_npz('Data/icm_weighted.npz')
+    # icm_weighted = sp.load_npz(data_folder / 'Data/icm_weighted.npz')
     # icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
     # ucm_age, ucm_region, ucm_all = Data.get_ucm()
 
@@ -188,7 +188,7 @@ if temperature == 'warm' or test is False:
     warm_recommender= cold_recommender
 
 if temperature == 'normal' and test is True:
-    icm_weighted = sp.load_npz('Data/icm_weighted.npz')
+    icm_weighted = sp.load_npz(data_folder / 'Data/icm_weighted.npz')
     ucm_age, ucm_region, ucm_all = Data.get_ucm()
     icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
 

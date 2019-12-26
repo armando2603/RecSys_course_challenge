@@ -8,7 +8,7 @@ Created on 06/07/2018
 
 
 from Base.Incremental_Training_Early_Stopping import Incremental_Training_Early_Stopping
-from Base.BaseRecommender import BaseRecommender
+from Base.BaseMatrixFactorizationRecommender import BaseMatrixFactorizationRecommender
 import os, sys
 import numpy as np, pickle
 from tqdm import tqdm
@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader
 
 
 
-class MF_MSE_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
+class MF_MSE_PyTorch(BaseMatrixFactorizationRecommender, Incremental_Training_Early_Stopping):
 
     RECOMMENDER_NAME = "MF_MSE_PyTorch_Recommender"
 
@@ -40,7 +40,10 @@ class MF_MSE_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
         self.n_users = URM_train.shape[0]
         self.n_items = URM_train.shape[1]
         self.normalize = False
-
+        self.H = None
+        self.W = None
+        self.H_best = None
+        self.W_best = None
 
         self.positive_threshold = positive_threshold
 
@@ -117,7 +120,7 @@ class MF_MSE_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
         ########################################################################################################
 
         self._train_with_early_stopping(epochs,
-                                        algorithm_name = self.RECOMMENDER_NAME,
+                                        algorithm_name=self.RECOMMENDER_NAME,
                                         **earlystopping_kwargs)
 
 
@@ -182,3 +185,12 @@ class MF_MSE_PyTorch(BaseRecommender, Incremental_Training_Early_Stopping):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+    def _prepare_model_for_validation(self):
+        """
+        :return:
+        """
+
+        self.ITEM_factors = self.pyTorchModel.get_W()
+        self.USER_factors = self.pyTorchModel.get_H()
+

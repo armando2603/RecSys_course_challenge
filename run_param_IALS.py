@@ -13,6 +13,7 @@ from MatrixFactorization.IALSRecommender import IALSRecommender
 from ParameterTuning.SearchBayesianSkopt import SearchBayesianSkopt
 from ParameterTuning.SearchAbstractClass import SearchInputRecommenderArgs
 from skopt.space import Real, Integer, Categorical
+from Hybrid.HybridNormRecommender import HybridNormRecommender
 
 
 Data = DataManager()
@@ -23,30 +24,32 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = IALSRecommender
+recommender = HybridNormRecommender
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
                                  evaluator_test=evaluator_test)
 
-earlystopping_keywargs = {"validation_every_n": 2,
-                              "stop_on_validation": True,
-                              "evaluator_object": evaluator_valid,
-                              "lower_validations_allowed": 1,
-                              "validation_metric": "MAP"
-                          }
+# earlystopping_keywargs = {"validation_every_n": 2,
+#                               "stop_on_validation": True,
+#                               "evaluator_object": evaluator_valid,
+#                               "lower_validations_allowed": 1,
+#                               "validation_metric": "MAP"
+#                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["num_factors"] = Integer(100, 200)
-hyperparameters_range_dictionary["alpha"] = Integer(0, 40)
-hyperparameters_range_dictionary["reg"] = Real(0.01, 0.5)
+hyperparameters_range_dictionary["alpha"] = Real(0, 2)
+hyperparameters_range_dictionary["beta"] = Real(0, 2)
+hyperparameters_range_dictionary["gamma"] = Real(0, 2)
+hyperparameters_range_dictionary["phi"] = Real(0, 2)
+hyperparameters_range_dictionary["psi"] = Real(0, 2)
 
 
 recommender_input_args = SearchInputRecommenderArgs(
     CONSTRUCTOR_POSITIONAL_ARGS=[urm_train],
     CONSTRUCTOR_KEYWORD_ARGS={},
     FIT_POSITIONAL_ARGS=[],
-    FIT_KEYWORD_ARGS={'epochs':20,**earlystopping_keywargs}
+    FIT_KEYWORD_ARGS={}
 )
 
 output_folder_path = "result_experiments/"
@@ -57,14 +60,13 @@ import os
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path)
 
-n_cases = 20
+n_cases = 100
 metric_to_optimize = "MAP"
 
 parameterSearch.search(recommender_input_args,
                        parameter_search_space = hyperparameters_range_dictionary,
                        n_cases = n_cases,
-                       n_random_starts = 1,
-                       save_model = "best",
+                       n_random_starts = 10,
                        output_folder_path = output_folder_path,
                        output_file_name_root = recommender.RECOMMENDER_NAME,
                        metric_to_optimize = metric_to_optimize

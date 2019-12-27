@@ -168,7 +168,7 @@ class SearchBayesianSkopt(SearchAbstractClass):
                n_random_starts = 5,
                output_folder_path = None,
                output_file_name_root = None,
-               save_model = "best",
+               save_model = "no",
                save_metadata = True,
                resume_from_saved = True,
                recommender_input_args_last_test = None,

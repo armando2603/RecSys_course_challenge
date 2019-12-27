@@ -123,8 +123,8 @@ if temperature == 'cold' or test is False:
     #
     # pyplot.plot(x_tick, MAP_per_k_valid)
     # pyplot.ylabel('MAP_valid')
-    # pyplot.xlabel('alpha')
-    # pyplot.show()
+    pyplot.xlabel('alpha')
+
     #
     # recommender.fit(alpha=best_alpha)
 
@@ -235,11 +235,11 @@ if temperature == 'normal' and test is True:
     # res = recommender.best_validation_metric
     # n_epochs = recommender.epochs_best
 
-    # recommender = HybridNorm1Recommender(urm_train)
-    # recommender.fit(alpha=0.88)
-
-    recommender = MF_MSE_PyTorch(urm_train)
+    recommender = HybridGen2Recommender(urm_train)
     recommender.fit()
+
+    # recommender = MF_MSE_PyTorch(urm_train)
+    # recommender.fit()
 
 
     normal_recommender = recommender

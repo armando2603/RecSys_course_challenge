@@ -40,12 +40,12 @@ data_folder = Path(__file__).parent.absolute()
 from MatrixFactorization.PyTorch.MF_MSE_PyTorch import MF_MSE_PyTorch
 
 test = True
-threshold = 7
-temperature = 'normal'
+threshold = 2
+temperature = 'one2'
 Data = DataManager()
 urm_train = Data.get_urm()
 
-valid = True
+valid = False
 
 
 sparse_matrix = sp.load_npz(data_folder / 'Data/csr_matrix_age.npz')
@@ -79,11 +79,10 @@ cold_recommender = None
 warm_recommender = None
 normal_recommender = None
 
-
 if temperature == 'cold' or test is False:
     # icm_weighted = sp.load_npz(data_folder / 'Data/icm_weighted.npz')
-    # icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
-    # ucm_age, ucm_region, ucm_all = Data.get_ucm()
+    icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
+    ucm_age, ucm_region, ucm_all = Data.get_ucm()
 
 
     # recommender = ItemKNNCFRecommender(urm_train)
@@ -123,13 +122,15 @@ if temperature == 'cold' or test is False:
     #
     # pyplot.plot(x_tick, MAP_per_k_valid)
     # pyplot.ylabel('MAP_valid')
-    pyplot.xlabel('alpha')
 
     #
     # recommender.fit(alpha=best_alpha)
 
     recommender = HybridNormRecommender(urm_train)
     recommender.fit()
+
+    # recommender = UserKNNCBFRecommender(urm_train, ucm_all)
+    # recommender.fit(shrink=500, topK=1600, normalize=True)
 
     cold_recommender = recommender
 
@@ -226,8 +227,8 @@ if temperature == 'normal' and test is True:
     #
     # recommender.fit(alpha=best_alpha)
 
-    earlystopping_keywargs = {"epochs_max": 2
-                              }
+    # earlystopping_keywargs = {"epochs_max": 2
+    #                           }
     #
     # recommender = SLIM_BPR_Cython(urm_train)
     # recommender.fit(epochs=60, lambda_i=0.0297, lambda_j=0.0188, learning_rate=0.008083, topK=202, **earlystopping_keywargs)
@@ -235,7 +236,7 @@ if temperature == 'normal' and test is True:
     # res = recommender.best_validation_metric
     # n_epochs = recommender.epochs_best
 
-    recommender = HybridGen2Recommender(urm_train)
+    recommender = HybridGenRecommender(urm_train)
     recommender.fit()
 
     # recommender = MF_MSE_PyTorch(urm_train)
@@ -266,11 +267,7 @@ if test:
     if temperature == 'normal':
         result, str_result = evaluator_test.evaluateRecommender(normal_recommender)
         print('The Map of test is : {}'.format(result[10]['MAP']))
-        # if valid:
-        #     result, str_result = evaluator_valid.evaluateRecommender(normal_recommender)
-        #     print('The Map of valid is : {}'.format(result[10]['MAP']))
-        # res_test = evaluate(urm_test, normal_recommender)
-        # print(res_test)
+
 
 else:
 

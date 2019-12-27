@@ -305,6 +305,7 @@ def split_train_leave_k_out_user_wise(URM, k_out = 1, use_validation_set = False
             URM_train_builder.add_data_lists([user_id] * len(user_interaction_items_train),
                                              user_interaction_items_train, user_interaction_data_train)
 
+
     URM_train = URM_train_builder.get_SparseMatrix()
     URM_test = URM_test_builder.get_SparseMatrix()
 

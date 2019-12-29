@@ -40,13 +40,13 @@ data_folder = Path(__file__).parent.absolute()
 from MatrixFactorization.PyTorch.MF_MSE_PyTorch import MF_MSE_PyTorch
 from FeatureWeighting.User_CFW_D_Similarity_Linalg import  User_CFW_D_Similarity_Linalg
 
-test = False
+test = True
 threshold = 2
 temperature = 'normal'
 Data = DataManager()
 urm_train = Data.get_urm()
 
-valid = False
+valid = True
 
 multiple_test = False
 num_test = 1

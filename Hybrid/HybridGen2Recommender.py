@@ -44,7 +44,7 @@ class HybridGen2Recommender(BaseItemSimilarityMatrixRecommender):
         self.recommender_2 = recommender_2
         # self.recommender_3 = recommender_3
 
-    def fit(self, alpha=0.06, beta=0.03, gamma=0):
+    def fit(self, alpha=0.472, beta=0.03, gamma=0):
         self.alpha = alpha
         # self.beta = beta
         # self.gamma = gamma

@@ -51,8 +51,8 @@ parameterSearch = SearchBayesianSkopt(recommender,
 
 hyperparameters_range_dictionary = {}
 hyperparameters_range_dictionary["beta"] = Real(0, 1)
-hyperparameters_range_dictionary["gamma"] = Real(0, 1)
-hyperparameters_range_dictionary["phi"] = Real(0, 1)
+# hyperparameters_range_dictionary["gamma"] = Real(0, 1)
+# hyperparameters_range_dictionary["phi"] = Real(0, 1)
 
 # hyperparameters_range_dictionary["topK"] = Integer(5, 100)
 # hyperparameters_range_dictionary["shrink"] = Integer(0, 500)

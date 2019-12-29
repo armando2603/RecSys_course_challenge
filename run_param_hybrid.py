@@ -23,6 +23,7 @@ from FeatureWeighting.User_CFW_D_Similarity_Linalg import User_CFW_D_Similarity_
 from Hybrid.HybridGen2Recommender import HybridGen2Recommender
 from Hybrid.HybridNormRecommender import HybridNormRecommender
 from Hybrid.HybridNorm1Recommender import HybridNorm1Recommender
+from Hybrid.HybridNorm2Recommender import HybridNorm2Recommender
 
 Data = DataManager()
 

@@ -74,12 +74,5 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
         return item_weights
 
     def _compute_item_matrix_score(self, user_id_array, items_to_compute=None):
-        item_weights_1 = self.recommender_1._compute_item_matrix_score(user_id_array)
-        item_weights_2 = self.recommender_2._compute_item_matrix_score(user_id_array)
-        # item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
-
-        item_weights = item_weights_1 * self.alpha
-        item_weights += item_weights_2 * (1 - self.alpha)
-        # item_weights += item_weights_3 * self.gamma
-
-        return item_weights
+        score_matrix_gen = self.score_matrix_1 * self.alpha + self.score_matrix_2 * (1 - self.alpha)
+        return score_matrix_gen

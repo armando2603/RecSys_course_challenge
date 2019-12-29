@@ -38,7 +38,7 @@ class HybridNorm2Recommender(BaseItemSimilarityMatrixRecommender):
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2
 
-    def fit(self, alpha=0.2):
+    def fit(self, alpha=0.6):
         # alpha=0.2, beta=0.8, gamma=0.012, phi=1.2
         self.alpha = alpha
 

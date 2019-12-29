@@ -44,7 +44,7 @@ class HybridNorm1Recommender(BaseItemSimilarityMatrixRecommender):
         # self.recommender_3 = recommender_3
         self.recommender_4 = recommender_4
 
-    def fit(self, alpha=0.35, beta=0.429, gamma=0.9, phi=0, psi=0):
+    def fit(self, alpha=0.44, beta=0.44, gamma=0.9, phi=0, psi=0):
         # alpha=0.2, beta=0.8, gamma=0.012, phi=1.2
         self.alpha = alpha
         self.beta = beta
@@ -97,13 +97,13 @@ class HybridNorm1Recommender(BaseItemSimilarityMatrixRecommender):
         # # item_weights_5 = self.recommender_5._compute_item_score(user_id_array)
 
         # item_weights = item_weights_1 * self.alpha
-        item_weights = item_weights_2 * self.beta
+        item_weights = item_weights_2 * self.alpha
         # item_weights += item_weights_3 * self.gamma
-        item_weights += item_weights_4 * (1 - self.beta)
+        item_weights += item_weights_4 * (1 - self.alpha)
         # item_weights += item_weights_5 * self.psi
 
         return item_weights
 
     def _compute_item_matrix_score(self, user_id_array, items_to_compute=None):
-        score_matrix_norm1 = self.score_matrix_2 * self.beta + self.score_matrix_4 * (1-self.beta)
+        score_matrix_norm1 = self.score_matrix_2 * self.alpha + self.score_matrix_4 * (1-self.alpha)
         return score_matrix_norm1

@@ -1,49 +1,46 @@
 from Base.Recommender_utils import check_matrix, similarityMatrixTopK
 from Base.BaseSimilarityMatrixRecommender import BaseItemSimilarityMatrixRecommender
-from KNN.ItemKNNCBFRecommender import ItemKNNCBFRecommender
+from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Base.NonPersonalizedRecommender import TopPop
 from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 from KNN.UserSimilarityHybridRecommender import UserSimilarityHybridRecommender
-from DataManager.DataManager import DataManager
+from Hybrid.HybridGenRecommender import HybridGenRecommender
+from GraphBased.RP3betaRecommender import RP3betaRecommender
+from MatrixFactorization.IALSRecommender import IALSRecommender
+from Hybrid.HybridNorm2Recommender import HybridNorm2Recommender
 import numpy as np
 from sklearn.preprocessing import normalize
+from Hybrid.HybridGen2Recommender import HybridGen2Recommender
 
-
-class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
-    """ HybridGenRecommender
+class HybridNorm3Recommender(BaseItemSimilarityMatrixRecommender):
+    """ HybridNorm3Recommender
     Hybrid of two prediction scores R = R1*alpha + R2*(1-alpha)
 
     """
 
-    RECOMMENDER_NAME = "HybridGenRecommender"
+    RECOMMENDER_NAME = "HybridNorm3Recommender"
 
     def __init__(self, urm_train):
-        super(HybridGenRecommender, self).__init__(urm_train)
-
-        self.num_users = urm_train.shape[0]
-        data = DataManager()
+        super(HybridNorm3Recommender, self).__init__(urm_train)
 
         urm_train = check_matrix(urm_train.copy(), 'csr')
-        icm_price, icm_asset, icm_sub, icm_all = data.get_icm()
-        ucm_age, ucm_region, ucm_all = data.get_ucm()
+        self.num_users = urm_train.shape[0]
 
-        recommender_1 = ItemKNNCBFRecommender(urm_train, icm_all)
-        recommender_1.fit(shrink=40, topK=20, feature_weighting='BM25')
+        recommender_1 = HybridGen2Recommender(urm_train)
+        recommender_1.fit()
 
-        recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
-        recommender_2.fit(shrink=500, topK=1600, normalize=True)
+        recommender_2 = HybridNorm2Recommender(urm_train)
+        recommender_2.fit()
+
 
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2
-        # self.recommender_3 = recommender_3
 
-    def fit(self, alpha=0.4359, beta=0.03, gamma=0):
-        # original 0.2
+    def fit(self, alpha=0):
+        # alpha=0.2, beta=0.8, gamma=0.012, phi=1.2
         self.alpha = alpha
-        # self.beta = beta
-        # self.gamma = gamma
 
         self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
         self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
@@ -74,5 +71,7 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
 
         return item_weights
 
+
     def _compute_item_matrix_score(self, user_id_array, items_to_compute=None):
-        return self.score_matrix_1 * self.alpha + self.score_matrix_2 * (1 - self.alpha)
+        score_matrix_norm3 = self.score_matrix_1 * self.alpha + self.score_matrix_2 * (1 - self.alpha)
+        return score_matrix_norm3

@@ -66,10 +66,10 @@ class HybridNormRecommender(BaseItemSimilarityMatrixRecommender):
         self.phi = phi
         self.psi = psi
 
-        self.score_matrix_1 = self.recommender_1._compute_item_score(np.arange(self.num_users))
-        self.score_matrix_2 = self.recommender_2._compute_item_score(np.arange(self.num_users))
-        self.score_matrix_3 = self.recommender_3._compute_item_score(np.arange(self.num_users))
-        self.score_matrix_4 = self.recommender_4._compute_item_score(np.arange(self.num_users))
+        self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
+        self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
+        self.score_matrix_3 = self.recommender_3._compute_item_matrix_score(np.arange(self.num_users))
+        self.score_matrix_4 = self.recommender_4._compute_item_matrix_score(np.arange(self.num_users))
         # self.score_matrix_5 = self.recommender_5._compute_item_score(np.arange(self.num_users))
 
         # normalize row-wise

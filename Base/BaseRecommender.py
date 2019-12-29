@@ -145,7 +145,6 @@ class BaseRecommender(object):
             #
             # ranking_list.append(ranking)
 
-
         if remove_top_pop_flag:
             scores_batch = self._remove_TopPop_on_scores(scores_batch)
 

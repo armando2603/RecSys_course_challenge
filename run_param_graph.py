@@ -41,9 +41,9 @@ parameterSearch = SearchBayesianSkopt(recommender,
 #                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["topK"] = Integer(5, 200)
-hyperparameters_range_dictionary["alpha"] = Real(0, 2)
-hyperparameters_range_dictionary["beta"] = Real(0, 2)
+hyperparameters_range_dictionary["topK"] = Integer(5, 1000)
+hyperparameters_range_dictionary["alpha"] = Real(0, 0.8)
+hyperparameters_range_dictionary["beta"] = Real(0, 0.8)
 # hyperparameters_range_dictionary["similarity"] = Categorical(["cosine", "jaccard", "adjusted"])
 hyperparameters_range_dictionary["normalize_similarity"] = Categorical([True, False])
 
@@ -69,7 +69,6 @@ parameterSearch.search(recommender_input_args,
                        parameter_search_space = hyperparameters_range_dictionary,
                        n_cases = n_cases,
                        n_random_starts = 10,
-                       save_model = "best",
                        output_folder_path = output_folder_path,
                        output_file_name_root = recommender.RECOMMENDER_NAME,
                        metric_to_optimize = metric_to_optimize

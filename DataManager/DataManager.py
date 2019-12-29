@@ -65,7 +65,7 @@ class DataManager(object):
 
     def get_urm(self):
         print('Building URM...')
-        return self.urm.tocsr()
+        return self.urm.tocsr().copy()
 
     def get_ucm(self):
         print('Building UCM ...')

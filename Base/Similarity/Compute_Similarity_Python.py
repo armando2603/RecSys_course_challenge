@@ -326,6 +326,7 @@ class Compute_Similarity_Python:
                     this_column_weights = np.multiply(this_column_weights, 1 / denominator)
 
                 elif self.tversky_coefficient:
+                    print('the tversky_alpha is {}'.format(self.tversky_alpha))
                     denominator = this_column_weights + \
                                   (sumOfSquared[columnIndex] - this_column_weights)*self.tversky_alpha + \
                                   (sumOfSquared - this_column_weights)*self.tversky_beta + self.shrink + 1e-6

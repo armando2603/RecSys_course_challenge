@@ -112,5 +112,4 @@ class BaseUserSimilarityMatrixRecommender(BaseSimilarityMatrixRecommender):
             item_scores[:, items_to_compute] = item_scores_all[:, items_to_compute]
         else:
             item_scores = user_weights_array.dot(self.URM_train).toarray()
-
         return item_scores

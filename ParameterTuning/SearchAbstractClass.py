@@ -137,7 +137,7 @@ class SearchAbstractClass(object):
                n_cases = None,
                output_folder_path = None,
                output_file_name_root = None,
-               parallelize = False,
+               parallelize = True,
                save_model = "best",
                evaluate_on_test_each_best_solution = True,
                save_metadata = True,

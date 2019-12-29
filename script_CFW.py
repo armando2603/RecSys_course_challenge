@@ -27,23 +27,23 @@ ucm_age, ucm_region, ucm_all = data.get_ucm()
 
 icm_price, icm_asset, icm_sub, icm_all = data.get_icm()
 
-recommender_4 = RP3betaRecommender(data.get_urm())
-recommender_4.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
+recommender_4 = UserKNNCFRecommender(data.get_urm())
+recommender_4.fit(shrink=2, topK=600, normalize=True)
 
 W_sparse_CF = recommender_4.W_sparse
 
-cfw = CFW_D_Similarity_Linalg(URM_train=data.get_urm(),
-                              ICM=icm_all.copy(),
+cfw = User_CFW_D_Similarity_Linalg(URM_train=data.get_urm(),
+                              UCM=ucm_all.copy(),
                               S_matrix_target=W_sparse_CF
                               )
 
-cfw.fit(topK=26, add_zeros_quota=0.453567, normalize_similarity=True)
+cfw.fit(topK=1740, add_zeros_quota=0.3528735601555612, normalize_similarity=True)
 
 weights = sps.diags(cfw.D_best)
 
-icm_weighted = icm_all.dot(weights)
+ucm_weighted = ucm_all.dot(weights)
 
-sps.save_npz("Data/icm_weighted.npz", icm_weighted)
+sps.save_npz("Data/ucm_weighted.npz", ucm_weighted.tocsr())
 
 
 

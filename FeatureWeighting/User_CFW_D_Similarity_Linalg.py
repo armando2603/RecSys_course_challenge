@@ -22,29 +22,29 @@ class User_CFW_D_Similarity_Linalg(BaseUserSimilarityMatrixRecommender):
     RECOMMENDER_NAME = "User_CFW_D_Similarity_Linalg"
 
 
-    def __init__(self, URM_train, ICM, S_matrix_target):
+    def __init__(self, URM_train, UCM, S_matrix_target):
 
         super(User_CFW_D_Similarity_Linalg, self).__init__(URM_train)
 
 
-        if (URM_train.shape[1] != ICM.shape[0]):
-            raise ValueError("Number of items not consistent. URM contains {} but ICM contains {}".format(URM_train.shape[1],
-                                                                                                          ICM.shape[0]))
+        if (URM_train.shape[0] != UCM.shape[0]):
+            raise ValueError("Number of items not consistent. URM contains {} but ICM contains {}".format(URM_train.shape[0],
+                                                                                                          UCM.shape[0]))
 
         if(S_matrix_target.shape[0] != S_matrix_target.shape[1]):
             raise ValueError("Items similarity matrix is not square: rows are {}, columns are {}".format(S_matrix_target.shape[0],
                                                                                                         S_matrix_target.shape[1]))
 
-        if(S_matrix_target.shape[0] != ICM.shape[0]):
+        if(S_matrix_target.shape[0] != UCM.shape[0]):
             raise ValueError("Number of items not consistent. S_matrix contains {} but ICM contains {}".format(S_matrix_target.shape[0],
-                                                                                                          ICM.shape[0]))
+                                                                                                          UCM.shape[0]))
 
         self.S_matrix_target = check_matrix(S_matrix_target, 'csr')
-        self.ICM = check_matrix(ICM, 'csr')
+        self.UCM = check_matrix(UCM, 'csr')
 
         self.n_items = self.URM_train.shape[1]
         self.n_users = self.URM_train.shape[0]
-        self.n_features = self.ICM.shape[1]
+        self.n_features = self.UCM.shape[1]
 
         self.sparse_weights = True
 
@@ -71,7 +71,7 @@ class User_CFW_D_Similarity_Linalg(BaseUserSimilarityMatrixRecommender):
 
 
         # Here is important only the structure
-        self.similarity = Compute_Similarity(self.ICM.T, shrink=0, topK=self.topK, normalize=False)
+        self.similarity = Compute_Similarity(self.UCM.T, shrink=0, topK=self.topK, normalize=False)
         S_matrix_contentKNN = self.similarity.compute_similarity()
         S_matrix_contentKNN = check_matrix(S_matrix_contentKNN, "csr")
 
@@ -86,7 +86,7 @@ class User_CFW_D_Similarity_Linalg(BaseUserSimilarityMatrixRecommender):
         if self.normalize_similarity:
 
             # Compute sum of squared
-            sum_of_squared_features = np.array(self.ICM.T.power(2).sum(axis=0)).ravel()
+            sum_of_squared_features = np.array(self.UCM.T.power(2).sum(axis=0)).ravel()
             sum_of_squared_features = np.sqrt(sum_of_squared_features)
 
 
@@ -210,7 +210,7 @@ class User_CFW_D_Similarity_Linalg(BaseUserSimilarityMatrixRecommender):
         self._generateTrainData_low_ram()
 
 
-        commonFeatures = self.ICM[self.row_list].multiply(self.ICM[self.col_list])
+        commonFeatures = self.UCM[self.row_list].multiply(self.UCM[self.col_list])
 
         linalg_result = linalg.lsqr(commonFeatures, self.data_list, show = False, atol=loss_tolerance, btol=loss_tolerance,
                           iter_lim = iteration_limit, damp=damp_coeff)
@@ -239,7 +239,7 @@ class User_CFW_D_Similarity_Linalg(BaseUserSimilarityMatrixRecommender):
             feature_weights = self.D_best
 
 
-        self.similarity = Compute_Similarity(self.ICM.T, shrink=0, topK=self.topK,
+        self.similarity = Compute_Similarity(self.UCM.T, shrink=0, topK=self.topK,
                                             normalize=self.normalize_similarity, row_weights=feature_weights)
 
         self.W_sparse = self.similarity.compute_similarity()

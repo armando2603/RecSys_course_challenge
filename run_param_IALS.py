@@ -14,6 +14,7 @@ from ParameterTuning.SearchBayesianSkopt import SearchBayesianSkopt
 from ParameterTuning.SearchAbstractClass import SearchInputRecommenderArgs
 from skopt.space import Real, Integer, Categorical
 from Hybrid.HybridNormRecommender import HybridNormRecommender
+from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 
 
 Data = DataManager()
@@ -24,7 +25,7 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = HybridNormRecommender
+recommender = UserKNNCFRecommender
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
@@ -38,11 +39,19 @@ parameterSearch = SearchBayesianSkopt(recommender,
 #                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["alpha"] = Real(0, 2)
-hyperparameters_range_dictionary["beta"] = Real(0, 2)
-hyperparameters_range_dictionary["gamma"] = Real(0, 2)
-hyperparameters_range_dictionary["phi"] = Real(0, 2)
-hyperparameters_range_dictionary["psi"] = Real(0, 2)
+# hyperparameters_range_dictionary["alpha"] = Real(0, 2)
+# hyperparameters_range_dictionary["beta"] = Real(0, 2)
+# hyperparameters_range_dictionary["gamma"] = Real(0, 2)
+# hyperparameters_range_dictionary["phi"] = Real(0, 2)
+# hyperparameters_range_dictionary["psi"] = Real(0, 2)
+
+hyperparameters_range_dictionary["topK"] = Integer(5, 2000)
+hyperparameters_range_dictionary["shrink"] = Integer(0, 1000)
+hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none", "TF-IDF"])
+hyperparameters_range_dictionary["similarity"] = Categorical(["tversky"])
+hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
+hyperparameters_range_dictionary["tversky_alpha"] = Real(0, 1)
+hyperparameters_range_dictionary["tversky_beta"] = Real(0, 1)
 
 
 recommender_input_args = SearchInputRecommenderArgs(

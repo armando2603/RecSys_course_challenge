@@ -19,6 +19,8 @@ from KNN.UserKNNCBFRecommender import UserKNNCBFRecommender
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 import numpy as np
 import scipy.sparse as sps
+from FeatureWeighting.User_CFW_D_Similarity_Linalg import User_CFW_D_Similarity_Linalg
+from Hybrid.HybridGen2Recommender import HybridGen2Recommender
 
 Data = DataManager()
 
@@ -28,36 +30,48 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = SLIM_BPR_Cython
+recommender = ItemKNNCBFRecommender
+
+# recommender_3 = UserKNNCFRecommender(urm_train)
+# recommender_3.fit(shrink=2, topK=600, normalize=True)
+# w_sparse = recommender_3.W_sparse
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
                                  evaluator_test=evaluator_test)
 
-earlystopping_keywargs = {"validation_every_n": 5,
-                              "stop_on_validation": True,
-                              "evaluator_object": evaluator_valid,
-                              "lower_validations_allowed": 2,
-                              "validation_metric": "MAP"
-                          }
+# earlystopping_keywargs = {"validation_every_n": 5,
+#                               "stop_on_validation": True,
+#                               "evaluator_object": evaluator_valid,
+#                               "lower_validations_allowed": 2,
+#                               "validation_metric": "MAP"
+#                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["topK"] = Integer(5, 500)
-# hyperparameters_range_dictionary["shrink"] = Integer(0, 500)
-# hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none"])
-# hyperparameters_range_dictionary["similarity"] = Categorical(["jaccard", "cosine", "tanimoto", "tversky"])
-hyperparameters_range_dictionary["symmetric"] = Categorical([True, False])
-hyperparameters_range_dictionary["sgd_mode"] = Categorical(["adam", "rmsprop"])
-hyperparameters_range_dictionary["lambda_i"] = Real(0.00001, 0.1)
-hyperparameters_range_dictionary["lambda_j"] = Real(0.00001, 0.1)
-hyperparameters_range_dictionary["learning_rate"] = Real(0.00001, 0.05)
+# hyperparameters_range_dictionary["alpha"] = Real(0, 1)
+
+hyperparameters_range_dictionary["topK"] = Integer(5, 50)
+hyperparameters_range_dictionary["shrink"] = Integer(0, 500)
+hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none", "TF-IDF"])
+hyperparameters_range_dictionary["similarity"] = Categorical(["tversky", "cosine", "jaccard", "tanimoto"])
+hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
+# hyperparameters_range_dictionary["tversky_alpha"] = Real(0, 1)
+# hyperparameters_range_dictionary["tversky_beta"] = Real(0, 1)
+
+# hyperparameters_range_dictionary = {}
+# hyperparameters_range_dictionary["topK"] = Integer(5, 2000)
+# hyperparameters_range_dictionary["add_zeros_quota"] = Real(low = 0, high = 1, prior = 'uniform')
+# hyperparameters_range_dictionary["normalize_similarity"] = Categorical([True, False])
 
 
+# ucm_w = sps.load_npz('Data/ucm_weighted.npz')
+# ucm_age, ucm_region, ucm_all = Data.get_ucm()
+_, _, _, icm_all = Data.get_icm()
 recommender_input_args = SearchInputRecommenderArgs(
-    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train],
+    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train, icm_all],
     CONSTRUCTOR_KEYWORD_ARGS={},
     FIT_POSITIONAL_ARGS=[],
-    FIT_KEYWORD_ARGS={**earlystopping_keywargs}
+    FIT_KEYWORD_ARGS={}
 )
 
 output_folder_path = "result_experiments/"
@@ -74,7 +88,6 @@ parameterSearch.search(recommender_input_args,
                        parameter_search_space = hyperparameters_range_dictionary,
                        n_cases = n_cases,
                        n_random_starts = 10,
-                       save_model = "best",
                        output_folder_path = output_folder_path,
                        output_file_name_root = recommender.RECOMMENDER_NAME,
                        metric_to_optimize = metric_to_optimize

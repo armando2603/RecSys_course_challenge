@@ -16,6 +16,7 @@ from skopt.space import Real, Integer, Categorical
 from Hybrid.HybridNormRecommender import HybridNormRecommender
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Hybrid.HybridGenRecommender import HybridGenRecommender
+from Hybrid.HybridGen2Recommender import HybridGen2Recommender
 
 
 Data = DataManager()
@@ -26,7 +27,7 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = HybridGenRecommender
+recommender = HybridGen2Recommender
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,

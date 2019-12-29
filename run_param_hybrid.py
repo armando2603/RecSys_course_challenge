@@ -22,6 +22,7 @@ import scipy.sparse as sps
 from FeatureWeighting.User_CFW_D_Similarity_Linalg import User_CFW_D_Similarity_Linalg
 from Hybrid.HybridGen2Recommender import HybridGen2Recommender
 from Hybrid.HybridNormRecommender import HybridNormRecommender
+from Hybrid.HybridNorm1Recommender import HybridNorm1Recommender
 
 Data = DataManager()
 
@@ -31,7 +32,7 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = HybridNormRecommender
+recommender = HybridNorm1Recommender
 
 # recommender_3 = UserKNNCFRecommender(urm_train)
 # recommender_3.fit(shrink=2, topK=600, normalize=True)
@@ -49,7 +50,6 @@ parameterSearch = SearchBayesianSkopt(recommender,
 #                           }
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["alpha"] = Real(0, 1)
 hyperparameters_range_dictionary["beta"] = Real(0, 1)
 hyperparameters_range_dictionary["gamma"] = Real(0, 1)
 hyperparameters_range_dictionary["phi"] = Real(0, 1)

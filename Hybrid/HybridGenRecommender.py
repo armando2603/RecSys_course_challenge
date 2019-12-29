@@ -10,6 +10,7 @@ from DataManager.DataManager import DataManager
 import numpy as np
 from sklearn.preprocessing import normalize
 
+
 class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
     """ HybridGenRecommender
     Hybrid of two prediction scores R = R1*alpha + R2*(1-alpha)
@@ -21,6 +22,7 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
     def __init__(self, urm_train):
         super(HybridGenRecommender, self).__init__(urm_train)
 
+        self.num_users = urm_train.shape[0]
         data = DataManager()
 
         urm_train = check_matrix(urm_train.copy(), 'csr')
@@ -33,13 +35,9 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
         recommender_2.fit(shrink=500, topK=1600, normalize=True)
 
-
-
-
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2
         # self.recommender_3 = recommender_3
-
 
     def fit(self, alpha=0.2, beta=0.03, gamma=0):
         self.alpha = alpha

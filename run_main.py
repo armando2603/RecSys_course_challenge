@@ -38,14 +38,15 @@ from Hybrid.HybridGen2Recommender import HybridGen2Recommender
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_BPR_Cython
 data_folder = Path(__file__).parent.absolute()
 from FeatureWeighting.User_CFW_D_Similarity_Linalg import  User_CFW_D_Similarity_Linalg
+from Hybrid.HybridNorm3Recommender import HybridNorm3Recommender
 
-test = True
+test = False
 threshold = 2
 temperature = 'normal'
 Data = DataManager()
 urm_train = Data.get_urm()
 
-valid = True
+valid = False
 
 multiple_test = False
 num_test = 1
@@ -245,38 +246,38 @@ else:
         ucm_age, ucm_region, ucm_all = Data.get_ucm()
         icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
 
-        x_tick = np.arange(start=0, stop=1.001, step=0.02)
-        print(len(x_tick))
-        MAP_per_k_test = []
-
-        MAP_per_k_valid = []
-
-        recommender = HybridNorm2Recommender(urm_train)
-
-
-        best_alpha = 0
-        best_res = 0
-        for alpha in tqdm(x_tick):
-
-            recommender.fit(alpha=alpha)
-
-            result_dict, res_str = evaluator_valid.evaluateRecommender(recommender)
-            MAP_per_k_valid.append(result_dict[10]["MAP"])
-
-            if result_dict[10]["MAP"] > best_res:
-                best_alpha = alpha
-                best_res = result_dict[10]["MAP"]
-
-        print('The alpha is {}'.format(best_alpha))
-
-
-
-        pyplot.plot(x_tick, MAP_per_k_valid)
-        pyplot.ylabel('MAP_valid')
-        pyplot.xlabel('alpha')
-        pyplot.show()
-
-        recommender.fit(alpha=alpha)
+        # x_tick = np.arange(start=0, stop=1.001, step=0.02)
+        # print(len(x_tick))
+        # MAP_per_k_test = []
+        #
+        # MAP_per_k_valid = []
+        #
+        # recommender = HybridNorm2Recommender(urm_train)
+        #
+        #
+        # best_alpha = 0
+        # best_res = 0
+        # for alpha in tqdm(x_tick):
+        #
+        #     recommender.fit(alpha=alpha)
+        #
+        #     result_dict, res_str = evaluator_valid.evaluateRecommender(recommender)
+        #     MAP_per_k_valid.append(result_dict[10]["MAP"])
+        #
+        #     if result_dict[10]["MAP"] > best_res:
+        #         best_alpha = alpha
+        #         best_res = result_dict[10]["MAP"]
+        #
+        # print('The alpha is {}'.format(best_alpha))
+        #
+        #
+        #
+        # pyplot.plot(x_tick, MAP_per_k_valid)
+        # pyplot.ylabel('MAP_valid')
+        # pyplot.xlabel('alpha')
+        # pyplot.show()
+        #
+        # recommender.fit(alpha=alpha)
 
         # earlystopping_keywargs = {"epochs_max": 2
         #                           }
@@ -287,8 +288,8 @@ else:
         # res = recommender.best_validation_metric
         # n_epochs = recommender.epochs_best
 
-        # recommender = HybridNormRecommender(urm_train)
-        # recommender.fit()
+        recommender = HybridNorm3Recommender(urm_train)
+        recommender.fit(alpha=0.2)
 
         # recommender = MF_MSE_PyTorch(urm_train)
         # recommender.fit()
@@ -343,4 +344,4 @@ else:
             recommended_list.append(items_strings)
 
         submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-        submission.to_csv(data_folder / 'Data/Submissions/29-12_1_submission.csv', index=False)
+        submission.to_csv(data_folder / 'Data/Submissions/29-12_2_submission.csv', index=False)

@@ -51,32 +51,32 @@ class HybridNorm1Recommender(BaseItemSimilarityMatrixRecommender):
         self.gamma = gamma
         self.phi = phi
 
-        # self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
-        self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
-        # self.score_matrix_3 = self.recommender_3._compute_item_matrix_score(np.arange(self.num_users))
-        self.score_matrix_4 = self.recommender_4._compute_item_matrix_score(np.arange(self.num_users))
-        # self.score_matrix_5 = self.recommender_5._compute_item_score(np.arange(self.num_users))
-
-        # normalize row-wise
-
-        # item_score_matrix_1 = normalize(self.score_matrix_1, norm='max', axis=1)
-        item_score_matrix_2 = normalize(self.score_matrix_2, norm='max', axis=1)
-        # item_score_matrix_3 = normalize(self.score_matrix_3, norm='max', axis=1)
-        item_score_matrix_4 = normalize(self.score_matrix_4, norm='max', axis=1)
-
-        # normalize column-wise
-
-        # user_score_matrix_1 = normalize(self.score_matrix_1.tocsc(), norm='max', axis=0)
-        user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
-        # user_score_matrix_3 = normalize(self.score_matrix_3.tocsc(), norm='max', axis=0)
-        user_score_matrix_4 = normalize(self.score_matrix_4.tocsc(), norm='max', axis=0)
-
-        # perform a weighted sum with alpha = 0.6 as the paper do
-
-        # self.score_matrix_1 = item_score_matrix_1 * 0.6 + user_score_matrix_1.tocsr() * 0.4
-        self.score_matrix_2 = item_score_matrix_2 * 0.6 + user_score_matrix_2.tocsr() * 0.4
-        # self.score_matrix_3 = item_score_matrix_3 * 0.6 + user_score_matrix_3.tocsr() * 0.4
-        self.score_matrix_4 = item_score_matrix_4 * 0.6 + user_score_matrix_4.tocsr() * 0.4
+        # # self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
+        # self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
+        # # self.score_matrix_3 = self.recommender_3._compute_item_matrix_score(np.arange(self.num_users))
+        # self.score_matrix_4 = self.recommender_4._compute_item_matrix_score(np.arange(self.num_users))
+        # # self.score_matrix_5 = self.recommender_5._compute_item_score(np.arange(self.num_users))
+        #
+        # # normalize row-wise
+        #
+        # # item_score_matrix_1 = normalize(self.score_matrix_1, norm='max', axis=1)
+        # item_score_matrix_2 = normalize(self.score_matrix_2, norm='max', axis=1)
+        # # item_score_matrix_3 = normalize(self.score_matrix_3, norm='max', axis=1)
+        # item_score_matrix_4 = normalize(self.score_matrix_4, norm='max', axis=1)
+        #
+        # # normalize column-wise
+        #
+        # # user_score_matrix_1 = normalize(self.score_matrix_1.tocsc(), norm='max', axis=0)
+        # user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
+        # # user_score_matrix_3 = normalize(self.score_matrix_3.tocsc(), norm='max', axis=0)
+        # user_score_matrix_4 = normalize(self.score_matrix_4.tocsc(), norm='max', axis=0)
+        #
+        # # perform a weighted sum with alpha = 0.6 as the paper do
+        #
+        # # self.score_matrix_1 = item_score_matrix_1 * 0.6 + user_score_matrix_1.tocsr() * 0.4
+        # self.score_matrix_2 = item_score_matrix_2 * 0.6 + user_score_matrix_2.tocsr() * 0.4
+        # # self.score_matrix_3 = item_score_matrix_3 * 0.6 + user_score_matrix_3.tocsr() * 0.4
+        # self.score_matrix_4 = item_score_matrix_4 * 0.6 + user_score_matrix_4.tocsr() * 0.4
 
         # self.score_matrix_1 = item_score_matrix_1
         # self.score_matrix_2 = item_score_matrix_2
@@ -85,15 +85,15 @@ class HybridNorm1Recommender(BaseItemSimilarityMatrixRecommender):
 
     def _compute_item_score(self, user_id_array, items_to_compute=None):
         # item_weights_1 = self.score_matrix_1[user_id_array].toarray()
-        item_weights_2 = self.score_matrix_2[user_id_array].toarray()
+        # item_weights_2 = self.score_matrix_2[user_id_array].toarray()
         # item_weights_3 = self.score_matrix_3[user_id_array].toarray()
-        item_weights_4 = self.score_matrix_4[user_id_array].toarray()
+        # item_weights_4 = self.score_matrix_4[user_id_array].toarray()
         # item_weights_5 = self.recommender_5._compute_item_score(user_id_array)
 
         # item_weights_1 = self.recommender_1._compute_item_score(user_id_array)
-        # item_weights_2 = self.recommender_2._compute_item_score(user_id_array)
+        item_weights_2 = self.recommender_2._compute_item_score(user_id_array)
         # item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
-        # item_weights_4 = self.recommender_4._compute_item_score(user_id_array)
+        item_weights_4 = self.recommender_4._compute_item_score(user_id_array)
         # # item_weights_5 = self.recommender_5._compute_item_score(user_id_array)
 
         # item_weights = item_weights_1 * self.alpha
@@ -104,6 +104,6 @@ class HybridNorm1Recommender(BaseItemSimilarityMatrixRecommender):
 
         return item_weights
 
-    def _compute_item_matrix_score(self, user_id_array, items_to_compute=None):
-        score_matrix_norm1 = self.score_matrix_2 * self.alpha + self.score_matrix_4 * (1-self.alpha)
-        return score_matrix_norm1
+    # def _compute_item_matrix_score(self, user_id_array, items_to_compute=None):
+    #     score_matrix_norm1 = self.score_matrix_2 * self.alpha + self.score_matrix_4 * (1-self.alpha)
+    #     return score_matrix_norm1

@@ -61,7 +61,7 @@ my_input = []
 for i in np.arange(num_test):
 
     urm_train, urm_test = split_train_leave_k_out_user_wise(data.get_urm(), temperature='normal')
-    urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid')
+    urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid2')
     my_input.append([urm_train, urm_test, urm_valid, x_tick])
 
 from multiprocessing import Pool

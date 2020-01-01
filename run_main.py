@@ -39,8 +39,9 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactoriz
 data_folder = Path(__file__).parent.absolute()
 from FeatureWeighting.User_CFW_D_Similarity_Linalg import  User_CFW_D_Similarity_Linalg
 from Hybrid.HybridNorm3Recommender import HybridNorm3Recommender
+from MatrixFactorization.ALSRecommender import ALSRecommender
 
-test = False
+test = True
 threshold = 2
 temperature = 'normal'
 Data = DataManager()
@@ -288,8 +289,8 @@ else:
         # res = recommender.best_validation_metric
         # n_epochs = recommender.epochs_best
 
-        recommender = HybridNorm3Recommender(urm_train)
-        recommender.fit(alpha=0.2)
+        recommender = ALSRecommender(urm_train)
+        recommender.fit()
 
         # recommender = MF_MSE_PyTorch(urm_train)
         # recommender.fit()

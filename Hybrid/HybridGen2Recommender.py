@@ -31,8 +31,8 @@ class HybridGen2Recommender(BaseItemSimilarityMatrixRecommender):
         ucm_age, ucm_region, ucm_all = data.get_ucm()
         _, _, _, icm_all = data.get_icm()
 
-        recommender_1 = ItemKNNCBFRecommender(urm_train, icm_all)
-        recommender_1.fit(shrink=40, topK=20, feature_weighting='BM25')
+        recommender_1 = ItemKNNCBFRecommender(urm_train, icm_weighted)
+        recommender_1.fit(topK= 100, shrink=5, feature_weighting='none', normalize=False)
 
         recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
         recommender_2.fit(shrink=1777, topK=1998, similarity='tversky',
@@ -44,7 +44,7 @@ class HybridGen2Recommender(BaseItemSimilarityMatrixRecommender):
         self.recommender_2 = recommender_2
         # self.recommender_3 = recommender_3
 
-    def fit(self, alpha=0.472, beta=0.03, gamma=0):
+    def fit(self, alpha=0.11, beta=0.03, gamma=0):
         self.alpha = alpha
         # self.beta = beta
         # self.gamma = gamma

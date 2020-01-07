@@ -40,17 +40,16 @@ data_folder = Path(__file__).parent.absolute()
 from FeatureWeighting.User_CFW_D_Similarity_Linalg import  User_CFW_D_Similarity_Linalg
 from Hybrid.HybridNorm3Recommender import HybridNorm3Recommender
 from MatrixFactorization.ALSRecommender import ALSRecommender
-
+from MatrixFactorization.BPRRecommender import BPRRecommender
 test = True
-threshold = 2
+threshold = 1
 temperature = 'normal'
 Data = DataManager()
 urm_train = Data.get_urm()
-
-valid = False
+valid = True
 
 multiple_test = False
-num_test = 1
+num_test = 3
 
 if multiple_test:
     # res = np.zeros(num_test)
@@ -75,8 +74,10 @@ if multiple_test:
         evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
         evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
+        args = {'beta': 0.016939501430845775, 'gamma': 0.00702678562222381, 'phi': 0.997241675965791, 'psi': 0.6651015790183177, 'alpha': 0.09107125274223805, 'li': 0.09111158764920892}
         recommender = HybridNormRecommender(urm_train)
-        recommender.fit()
+        recommender.fit(**args)
+
 
         result, str_result = evaluator_test.evaluateRecommender(recommender)
         # result, str_result = evaluator_valid.evaluateRecommender(recommender)
@@ -123,56 +124,11 @@ else:
 
     if temperature == 'cold' and test is True:
         # icm_weighted = sp.load_npz(data_folder / 'Data/icm_weighted.npz')
-        icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
-        ucm_age, ucm_region, ucm_all = Data.get_ucm()
+        # icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
+        # ucm_age, ucm_region, ucm_all = Data.get_ucm()
 
-
-        # recommender = ItemKNNCFRecommender(urm_train)
-        # recommender.fit(shrink=29, topK=6, similarity='jaccard')
-
-        # recommender = HybridNormRecommender(urm_train, ucm_all, icm_all)
-        # recommender.fit()
-
-        # recommender = RP3betaRecommender(urm_train)
-        # recommender.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
-
-        # x_tick = np.arange(start=0.18, stop=0.25001, step=0.01)
-        # print(len(x_tick))
-        # MAP_per_k_test = []
-        #
-        # MAP_per_k_valid = []
-        #
-        # recommender = HybridColdRecommender(urm_train, ucm_all, icm_weighted)
-        #
-        #
-        # best_alpha = 0
-        # best_res = 0
-        # for alpha in tqdm(x_tick):
-        #
-        #     recommender.fit(alpha=alpha)
-        #
-        #     result_dict, res_str = evaluator_valid.evaluateRecommender(recommender)
-        #     MAP_per_k_valid.append(result_dict[10]["MAP"])
-        #
-        #     if result_dict[10]["MAP"] > best_res:
-        #         best_alpha = alpha
-        #         best_res = result_dict[10]["MAP"]
-        #
-        # print('The alpha is {}'.format(best_alpha))
-        #
-        #
-        #
-        # pyplot.plot(x_tick, MAP_per_k_valid)
-        # pyplot.ylabel('MAP_valid')
-
-        #
-        # recommender.fit(alpha=best_alpha)
-
-        recommender = HybridNormRecommender(urm_train)
+        recommender = HybridGenRecommender(urm_train)
         recommender.fit()
-
-        # recommender = UserKNNCBFRecommender(urm_train, ucm_all)
-        # recommender.fit(shrink=500, topK=1600, normalize=True)
 
         cold_recommender = recommender
 
@@ -289,22 +245,14 @@ else:
         # res = recommender.best_validation_metric
         # n_epochs = recommender.epochs_best
 
-        recommender = ALSRecommender(urm_train)
+        # args = {'num_factors': 225, 'reg': 1.1588409492191925e-05}
+        # recommender = IALSRecommender(urm_train)
+        # recommender.fit(**args)
+
+        recommender = HybridGenRecommender(urm_train)
         recommender.fit()
 
-        # recommender = MF_MSE_PyTorch(urm_train)
-        # recommender.fit()
-
-        # recommender = ItemKNNCFRecommender(urm_train)
-        # recommender.fit(topK=5, shrink=500, feature_weighting='BM25', similarity='tversky', normalize=False, tversky_alpha=0.0, tversky_beta=1.0)
-
-        # recommender = UserKNNCFRecommender(urm_train)
-        # recommender.fit(topK=697, shrink=1000, feature_weighting='TF-IDF', similarity='tversky', normalize=False, tversky_alpha=1.0, tversky_beta=1.0)
-
-        # recommender = RP3betaRecommender(urm_train)
-        # recommender.fit(topK=31, alpha=0.40346505, beta=0.1560091, normalize_similarity=True)
-
-        normal_recommender = recommender
+    normal_recommender = recommender
 
     if test:
 
@@ -336,13 +284,12 @@ else:
 
         recommended_list = []
         for user in tqdm(users):
-            if Data.get_cold_users(0)[user]:
-                recommended_items = zero_recommender.recommend(user, 10)
-            else:
-                recommended_items = normal_recommender.recommend(user, 10)
-
+            # if Data.get_cold_users(0)[user]:
+            #     recommended_items = zero_recommender.recommend(user, 10)
+            # else:
+            recommended_items = normal_recommender.recommend(user, 10)
             items_strings = ' '.join([str(i) for i in recommended_items])
             recommended_list.append(items_strings)
 
         submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-        submission.to_csv(data_folder / 'Data/Submissions/29-12_2_submission.csv', index=False)
+        submission.to_csv(data_folder / 'Data/Submissions/5_1_1_submission.csv', index=False)

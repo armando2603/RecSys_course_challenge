@@ -37,7 +37,7 @@ class ALSRecommender(BaseMatrixFactorizationRecommender, Incremental_Training_Ea
 
 
 
-    def fit(self, num_factors=250, reg=0.3, iterations=100, alpha=5, valid=True,
+    def fit(self, num_factors=250, reg=0.3, iterations=200, alpha=5, valid=True,
             **earlystopping_kwargs):
 
         self.num_epochs = iterations

@@ -9,6 +9,9 @@ from KNN.UserSimilarityHybridRecommender import UserSimilarityHybridRecommender
 from DataManager.DataManager import DataManager
 import numpy as np
 from sklearn.preprocessing import normalize
+from pathlib import Path
+import scipy.sparse as sps
+
 
 
 class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
@@ -21,6 +24,8 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
 
     def __init__(self, urm_train, eurm=False):
         super(HybridGenRecommender, self).__init__(urm_train)
+
+        self.data_folder = Path(__file__).parent.parent.absolute()
 
         self. eurm = eurm
 
@@ -41,7 +46,7 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
         self.recommender_2 = recommender_2
         # self.recommender_3 = recommender_3
 
-    def fit(self, alpha=0.4359, beta=0.03, gamma=0):
+    def fit(self, alpha=0.2, beta=0.03, gamma=0):
         # original 0.2
         self.alpha = alpha
         # self.beta = beta
@@ -52,23 +57,28 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
 
         if self.eurm:
 
-            self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
-            self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
+            if Path(self.data_folder / 'Data/icm_sparse.npz').is_file():
+                print("Previous icm_sparse found")
+                self.score_matrix_1 = sps.load_npz(self.data_folder / 'Data/icm_sparse.npz')
+            else:
+                print("icm_sparse not found, create new one...")
+                self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
+                item_score_matrix_1 = normalize(self.score_matrix_1, norm='max', axis=1)
+                user_score_matrix_1 = normalize(self.score_matrix_1.tocsc(), norm='max', axis=0)
+                self.score_matrix_1 = item_score_matrix_1 * 0.6 + user_score_matrix_1.tocsr() * 0.4
+                sps.save_npz(self.data_folder / 'Data/icm_sparse.npz', self.score_matrix_1)
 
-            # normalize row-wise
+            if Path(self.data_folder / 'Data/ucm_sparse.npz').is_file():
+                print("Previous ucm_sparse found")
+                self.score_matrix_2 = sps.load_npz(self.data_folder / 'Data/ucm_sparse.npz')
+            else:
+                print("ucm_sparse not found, create new one...")
+                self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
+                item_score_matrix_2 = normalize(self.score_matrix_2, norm='max', axis=1)
+                user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
+                self.score_matrix_2 = item_score_matrix_2 * 0.6 + user_score_matrix_2.tocsr() * 0.4
+                sps.save_npz(self.data_folder / 'Data/ucm_sparse.npz', self.score_matrix_2)
 
-            item_score_matrix_1 = normalize(self.score_matrix_1, norm='max', axis=1)
-            item_score_matrix_2 = normalize(self.score_matrix_2, norm='max', axis=1)
-
-            # normalize column-wise
-
-            user_score_matrix_1 = normalize(self.score_matrix_1.tocsc(), norm='max', axis=0)
-            user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
-
-            # perform a weighted sum with alpha = 0.6 as the paper do
-
-            self.score_matrix_1 = item_score_matrix_1 * 0.6 + user_score_matrix_1.tocsr() * 0.4
-            self.score_matrix_2 = item_score_matrix_2 * 0.6 + user_score_matrix_2.tocsr() * 0.4
 
     def _compute_item_score(self, user_id_array, items_to_compute=None):
         if self.eurm:
@@ -82,7 +92,6 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
 
         item_weights = item_weights_1 * self.alpha
         item_weights += item_weights_2 * (1 - self.alpha)
-        # item_weights += item_weights_3 * self.gamma
 
         return item_weights
 

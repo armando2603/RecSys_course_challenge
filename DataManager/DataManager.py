@@ -114,66 +114,69 @@ class DataManager(object):
 
         # 1 - Price
 
-        price_df = pd.read_csv(data_folder / "Data/data_ICM_price.csv")
-        list_price = list(price_df['data'])
-        list_item = list(price_df['row'])
-
-        intervallo1 = np.arange(1001, step=200)
-        intervallo2 = np.arange(start=2000, stop=10001, step=1000)
-        intervallo3 = np.arange(start=20000, stop=100001, step=10000)
-        intervallo = np.append(intervallo1, intervallo2)
-        intervallo = np.append(intervallo, intervallo3)
-        list_price = np.array(list_price)
-        list_price = list_price * 100000
-        list_price = np.digitize(list_price, intervallo)
-
-        n_price = max(list_price)+1
-
-        icm_shape = (n_item, n_price)
-
-        ones = np.ones(len(list_price))
-        icm_price = sps.coo_matrix((ones, (list_item, list_price)), shape=icm_shape)
-        icm_price = icm_price.tocsr()
-
+        # price_df = pd.read_csv(data_folder / "Data/data_ICM_price.csv")
+        # list_price = list(price_df['data'])
+        # list_item = list(price_df['row'])
+        #
+        # intervallo1 = np.arange(1001, step=200)
+        # intervallo2 = np.arange(start=2000, stop=10001, step=1000)
+        # intervallo3 = np.arange(start=20000, stop=100001, step=10000)
+        # intervallo = np.append(intervallo1, intervallo2)
+        # intervallo = np.append(intervallo, intervallo3)
+        # list_price = np.array(list_price)
+        # list_price = list_price * 100000
+        # list_price = np.digitize(list_price, intervallo)
+        #
+        # n_price = max(list_price)+1
+        #
+        # icm_shape = (n_item, n_price)
+        #
+        # ones = np.ones(len(list_price))
+        # icm_price = sps.coo_matrix((ones, (list_item, list_price)), shape=icm_shape)
+        # icm_price = icm_price.tocsr()
+        icm_price = self.get_icm_price(200)
 
         # 2 - Asset
 
-        asset_df = pd.read_csv(data_folder / "Data/data_ICM_asset.csv")
-        list_asset = list(asset_df['data'])
-        list_item = list(asset_df['row'])
-
-        interval1 = np.arange(1001, step=1000 / 3)
-        interval2 = np.arange(start=1500, stop=2001, step=500)
-        interval3 = np.arange(start=3000, stop=10001, step=1000)
-        interval4 = np.array([100000])
-        final_interval = np.append(interval1, interval2)
-        final_interval = np.append(final_interval, interval3)
-        final_interval = np.append(final_interval, interval4)
-        list_asset = np.array(list_asset)
-        list_asset = list_asset * 100000
-        list_asset = np.digitize(list_asset, final_interval)
-        n_asset = max(list_asset)+1
-        icm_shape = (n_item, n_asset)
-
-        ones = np.ones(len(list_asset))
-        icm_asset = sps.coo_matrix((ones, (list_item, list_asset)), shape=icm_shape)
-        icm_asset = icm_asset.tocsr()
+        # asset_df = pd.read_csv(data_folder / "Data/data_ICM_asset.csv")
+        # list_asset = list(asset_df['data'])
+        # list_item = list(asset_df['row'])
+        #
+        # interval1 = np.arange(1001, step=1000 / 3)
+        # interval2 = np.arange(start=1500, stop=2001, step=500)
+        # interval3 = np.arange(start=3000, stop=10001, step=1000)
+        # interval4 = np.array([100000])
+        # final_interval = np.append(interval1, interval2)
+        # final_interval = np.append(final_interval, interval3)
+        # final_interval = np.append(final_interval, interval4)
+        # list_asset = np.array(list_asset)
+        # list_asset = list_asset * 100000
+        # list_asset = np.digitize(list_asset, final_interval)
+        # n_asset = max(list_asset)+1
+        # icm_shape = (n_item, n_asset)
+        #
+        # ones = np.ones(len(list_asset))
+        # icm_asset = sps.coo_matrix((ones, (list_item, list_asset)), shape=icm_shape)
+        # icm_asset = icm_asset.tocsr()
 
         # icm_all = sps.hstack((icm_price, icm_asset))
         # icm_all.tocsr()
+
+        icm_asset = self.get_icm_asset(200)
 
         # 3 - Sub_class
 
         sub_df = pd.read_csv(data_folder / "Data/data_ICM_sub_class.csv")
         list_sub = list(sub_df['col'])
         list_item = list(sub_df['row'])
-        n_sub = len(list(sub_df['row'].unique()))
+        n_sub = max(sub_df['col'].unique())
 
-        icm_shape = (n_item, n_sub)
+        icm_shape = (n_item, n_sub + 1)
 
         ones = np.ones(len(list_sub))
         icm_sub = sps.coo_matrix((ones, (list_item, list_sub)), shape=icm_shape)
         icm_sub = icm_sub.tocsr()
+
 
         icm_all = sps.hstack((icm_price, icm_asset, icm_sub))
         icm_all.tocsr()
@@ -227,14 +230,14 @@ class DataManager(object):
 
         return urm
 
-    def modify_urm_user_warm(self, urm, thresold=10):
+    def modify_urm_user_warm(self, urm, thresold=1):
         warm_users_mask = np.ediff1d(urm.tocsr().indptr) > thresold
         warm_users = np.arange(urm.shape[0])[warm_users_mask]
 
         urm = urm[warm_users, :]
         return urm
 
-    def get_urm_warm_items(self, threshold=10):
+    def get_urm_warm_items(self, threshold=1):
         users = self.get_raw_users()
         items = self.get_raw_items()
         length = items.shape[0]
@@ -257,7 +260,7 @@ class DataManager(object):
 
         return urm
 
-    def get_urm_warm_users(self, threshold=10):
+    def get_urm_warm_users(self, threshold=1):
 
         n_users, n_items = self.urm.shape
 
@@ -375,3 +378,77 @@ class DataManager(object):
         weight_matrix = sps.csr_matrix(weight_matrix)
 
         return weight_matrix
+
+    def get_icm_price(self, n_clusters):
+        """
+        Create an ICM (tracks, n_clusters) gathering tracks according to their duration in milliseconds.
+        Each cluster has the same number of tracks.
+        :param n_clusters: number of clusters
+        :return: icm: the item content matrix
+        """
+
+        urm = self.get_urm()
+
+        tracks_df = pd.read_csv('Data/data_ICM_price.csv')
+        prices = tracks_df['data'].values
+
+        dur_idx = np.argsort(prices)[::-1]
+
+        item_per_cluster = int(urm.shape[1] / n_clusters)
+
+        rows = []
+        cols = []
+        data = []
+
+        for i in tqdm(range(n_clusters), 'ICM prices:'):
+
+            # # If last iteration
+            if i == n_clusters - 1:
+                items = dur_idx[item_per_cluster * i:]
+            else:
+                items = dur_idx[item_per_cluster * i: item_per_cluster * (i + 1)]
+
+            rows.extend(items)
+            cols.extend([i for x in range(len(items))])
+            data.extend([1 for x in range(len(items))])
+
+        icm = sps.csr_matrix((data, (rows, cols)), shape=(urm.shape[1], n_clusters))
+
+        return icm
+
+    def get_icm_asset(self, n_clusters):
+        """
+        Create an ICM (tracks, n_clusters) gathering tracks according to their duration in milliseconds.
+        Each cluster has the same number of tracks.
+        :param n_clusters: number of clusters
+        :return: icm: the item content matrix
+        """
+
+        urm = self.get_urm()
+
+        asset_df = pd.read_csv('Data/data_ICM_asset.csv')
+        assets = asset_df['data'].values
+
+        dur_idx = np.argsort(assets)[::-1]
+
+        item_per_cluster = int(urm.shape[1] / n_clusters)
+
+        rows = []
+        cols = []
+        data = []
+
+        for i in tqdm(range(n_clusters), 'ICM asset:'):
+
+            # # If last iteration
+            if i == n_clusters - 1:
+                items = dur_idx[item_per_cluster * i:]
+            else:
+                items = dur_idx[item_per_cluster * i: item_per_cluster * (i + 1)]
+
+            rows.extend(items)
+            cols.extend([i for x in range(len(items))])
+            data.extend([1 for x in range(len(items))])
+
+        icm = sps.csr_matrix((data, (rows, cols)), shape=(urm.shape[1], n_clusters))
+
+        return icm

@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+from Base.BaseRecommender import BaseRecommender
 import theano, numpy
 import theano.tensor as T
 from theano.printing import pprint
@@ -21,9 +23,10 @@ import time
 import sys
 from collections import defaultdict
 
-class MatrixFactorization_BPR_Theano(object):
+class MatrixFactorization_BPR_Theano(BaseRecommender):
 
-    def __init__(self, rank, n_users, n_items, lambda_u = 0.0025, lambda_i = 0.0025, lambda_j = 0.00025, lambda_bias = 0.0, learning_rate = 0.05):
+    def __init__(self, urm_train, rank, n_users, n_items, lambda_u = 0.0025, lambda_i = 0.0025, lambda_j = 0.00025, lambda_bias = 0.0, learning_rate = 0.05):
+        super(MatrixFactorization_BPR_Theano, self).__init__(urm_train)
         """
           Creates a new object for training and testing a Bayesian
           Personalised Ranking (BPR) Matrix Factorisation 
@@ -224,7 +227,7 @@ class MatrixFactorization_BPR_Theano(object):
         """
         return self.predictions(user_index)[item_index]
 
-    def top_predictions(self, user_index, topn=10):
+    def recommend(self, user_index, cutoff=10):
         """
           Returns the item indices of the top predictions
           for `user_index`. The number of predictions to return
@@ -235,7 +238,7 @@ class MatrixFactorization_BPR_Theano(object):
         return [ 
             item_index for item_index in numpy.argsort(self.predictions(user_index)) 
             if item_index not in self.train_dict[user_index]
-        ][::-1][:topn]
+        ][::-1][:cutoff]
 
     def test(self, test_data):
         """

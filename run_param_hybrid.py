@@ -98,6 +98,12 @@ parameterSearch.search(recommender_input_args,
                        metric_to_optimize = metric_to_optimize
                       )
 
+tuning_params = dict()
+tuning_params = {
+  "NN": (50,1500),
+  "SHRK": (0,2000)
+ }
+
 
 # def search_param(**tuning_params):
 #     # recommender.fit(epochs=400, topK=int(tuning_params['NN']), lambda_i=tuning_params['L1'],

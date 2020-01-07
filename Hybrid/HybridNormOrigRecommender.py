@@ -17,30 +17,30 @@ from sklearn.preprocessing import normalize
 import scipy.sparse as sps
 from pathlib import Path
 
-class HybridNormRecommender(BaseItemSimilarityMatrixRecommender):
-    """ HybridNormRecommender
+class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
+    """ HybridNormOrigRecommender
     Hybrid of two prediction scores R = R1*alpha + R2*(1-alpha)
 
     """
 
-    RECOMMENDER_NAME = "HybridNormRecommender"
+    RECOMMENDER_NAME = "HybridNormOrigRecommender"
 
     def __init__(self, urm_train, eurm=False):
-        super(HybridNormRecommender, self).__init__(urm_train)
+        super(HybridNormOrigRecommender, self).__init__(urm_train)
         self.data_folder = Path(__file__).parent.parent.absolute()
         self.eurm = eurm
         self.num_users = urm_train.shape[0]
 
         urm_train = check_matrix(urm_train.copy(), 'csr')
 
-        recommender_1 = HybridGen2Recommender(urm_train, eurm=self.eurm)
+        recommender_1 = HybridGenRecommender(urm_train, eurm=self.eurm)
         recommender_1.fit()
 
-        # recommender_2 = ItemKNNCFRecommender(urm_train)
-        # recommender_2.fit(shrink=30, topK=20)
-
         recommender_2 = ItemKNNCFRecommender(urm_train)
-        recommender_2.fit(topK=5, shrink=500, feature_weighting='BM25', similarity='tversky', normalize=False, tversky_alpha=0.0, tversky_beta=1.0)
+        recommender_2.fit(shrink=30, topK=20)
+
+        # recommender_2 = ItemKNNCFRecommender(urm_train)
+        # recommender_2.fit(topK=5, shrink=500, feature_weighting='BM25', similarity='tversky', normalize=False, tversky_alpha=0.0, tversky_beta=1.0)
 
         recommender_3 = UserKNNCFRecommender(urm_train)
         recommender_3.fit(shrink=2, topK=600, normalize=True)
@@ -66,13 +66,13 @@ class HybridNormRecommender(BaseItemSimilarityMatrixRecommender):
 
         if self.eurm:
 
-            if Path(self.data_folder / 'Data/uicm_sparse.npz').is_file():
+            if Path(self.data_folder / 'Data/uicm_orig_sparse.npz').is_file():
                 print("Previous uicm_sparse found")
                 self.score_matrix_1 = sps.load_npz(self.data_folder / 'Data/uicm_sparse.npz')
             else:
                 print("uicm_sparse not found, create new one...")
                 self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
-                sps.save_npz(self.data_folder / 'Data/uicm_sparse.npz', self.score_matrix_1)
+                sps.save_npz(self.data_folder / 'Data/uicm_orig_sparse.npz', self.score_matrix_1)
 
             self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
             self.score_matrix_3 = self.recommender_3._compute_item_matrix_score(np.arange(self.num_users))
@@ -80,11 +80,12 @@ class HybridNormRecommender(BaseItemSimilarityMatrixRecommender):
             self.score_matrix_5 = self.recommender_5._compute_item_matrix_score(np.arange(self.num_users))
             self.score_matrix_6 = self.recommender_6._compute_item_score(np.arange(self.num_users))
 
-            self.score_matrix_2 = normalize(self.score_matrix_2, norm='l2', axis=1)
-            self.score_matrix_3 = normalize(self.score_matrix_3, norm='l2', axis=1)
-            self.score_matrix_4 = normalize(self.score_matrix_4, norm='l2', axis=1)
-            self.score_matrix_5 = normalize(self.score_matrix_5, norm='l2', axis=1)
-            self.score_matrix_6 = normalize(self.score_matrix_6, norm='l2', axis=1)
+            self.score_matrix_1 = normalize(self.score_matrix_2, norm='max', axis=1)
+            self.score_matrix_2 = normalize(self.score_matrix_2, norm='max', axis=1)
+            self.score_matrix_3 = normalize(self.score_matrix_3, norm='max', axis=1)
+            self.score_matrix_4 = normalize(self.score_matrix_4, norm='max', axis=1)
+            self.score_matrix_5 = normalize(self.score_matrix_5, norm='max', axis=1)
+            self.score_matrix_6 = normalize(self.score_matrix_6, norm='max', axis=1)
 
 
             # user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
@@ -131,6 +132,13 @@ class HybridNormRecommender(BaseItemSimilarityMatrixRecommender):
             item_weights_5 = self.recommender_5._compute_item_score(user_id_array)
             item_weights_6 = self.recommender_6._compute_item_score(user_id_array)
 
+            item_weights_1 = normalize(item_weights_1, norm='max', axis=1)
+            item_weights_2 = normalize(item_weights_2, norm='max', axis=1)
+            item_weights_3 = normalize(item_weights_3, norm='max', axis=1)
+            item_weights_4 = normalize(item_weights_4, norm='max', axis=1)
+            item_weights_5 = normalize(item_weights_5, norm='max', axis=1)
+            item_weights_6 = normalize(item_weights_6, norm='max', axis=1)
+            
         item_weights = item_weights_1 * self.alpha
         item_weights += item_weights_2 * self.beta
         item_weights += item_weights_3 * self.gamma

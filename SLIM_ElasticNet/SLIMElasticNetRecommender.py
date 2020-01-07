@@ -28,7 +28,7 @@ class SLIMElasticNetRecommender(BaseItemSimilarityMatrixRecommender):
     """
 
     def __init__(self, URM, alpha=1e-4, l1_ratio=0.1, fit_intercept=False, copy_X=False, precompute=False, selection='random',
-                max_iter=100, tol=1e-4, topK=100, positive_only=True, workers=multiprocessing.cpu_count(), use_tail_boost=False, verbose=True):
+                max_iter=100, tol=1e-4, topK=50, positive_only=True, workers=multiprocessing.cpu_count(), use_tail_boost=False, verbose=True):
 
         super(SLIMElasticNetRecommender, self).__init__(URM, verbose=verbose)
 

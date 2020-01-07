@@ -24,6 +24,7 @@ from Hybrid.HybridGen2Recommender import HybridGen2Recommender
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_BPR_Cython
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_AsySVD_Cython
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_FunkSVD_Cython
+from Hybrid.HybridNormRecommender import HybridNormRecommender
 
 Data = DataManager()
 
@@ -33,7 +34,7 @@ urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = IALSRecommender
+recommender = ItemKNNCBFRecommender
 # recommender = MatrixFactorization_FunkSVD_Cython
 # recommender = MatrixFactorization_AsySVD_Cython
 # recommender = MatrixFactorization_BPR_Cython
@@ -46,29 +47,35 @@ parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
                                  evaluator_test=evaluator_test)
 
-earlystopping_keywargs = {"validation_every_n": 5,
-                              "stop_on_validation": True,
-                              "evaluator_object": evaluator_valid,
-                              "lower_validations_allowed": 2,
-                              "validation_metric": "MAP"
-                          }
+# earlystopping_keywargs = {"validation_every_n": 5,
+#                               "stop_on_validation": True,
+#                               "evaluator_object": evaluator_valid,
+#                               "lower_validations_allowed": 2,
+#                               "validation_metric": "MAP"
+#                           }
 
 hyperparameters_range_dictionary = {}
 # hyperparameters_range_dictionary["alpha"] = Real(0, 1)
-hyperparameters_range_dictionary["num_factors"] = Integer(70, 200)
-hyperparameters_range_dictionary["confidence_scaling"] = Categorical(["linear", "log"])
-hyperparameters_range_dictionary["alpha"] = Real(0.001, 50, prior='log-uniform')
-hyperparameters_range_dictionary["epsilon"] = Real(0.001, 10, prior='log-uniform')
-hyperparameters_range_dictionary["reg"] = Real(0.00001, 0.01, prior='log-uniform')
+# hyperparameters_range_dictionary["num_factors"] = Integer(70, 200)
+# hyperparameters_range_dictionary["confidence_scaling"] = Categorical(["linear", "log"])
+# hyperparameters_range_dictionary["alpha"] = Real(0.001, 50, prior='log-uniform')
+# hyperparameters_range_dictionary["epsilon"] = Real(0.001, 10, prior='log-uniform')
+# hyperparameters_range_dictionary["reg"] = Real(0.00001, 0.01, prior='log-uniform')
 
+# hyperparameters_range_dictionary["beta"] = Real(0, 1)
+# hyperparameters_range_dictionary["gamma"] = Real(0, 1)
+# hyperparameters_range_dictionary["phi"] = Real(0, 1)
+# hyperparameters_range_dictionary["psi"] = Real(0, 1)
+# hyperparameters_range_dictionary["alpha"] = Real(0, 1)
+# hyperparameters_range_dictionary["li"] = Real(0, 1)
 
-# hyperparameters_range_dictionary["topK"] = Integer(5, 50)
-# hyperparameters_range_dictionary["shrink"] = Integer(0, 500)
-# hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none", "TF-IDF"])
-# hyperparameters_range_dictionary["similarity"] = Categorical(["tversky", "cosine", "jaccard", "tanimoto"])
-# hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
-# hyperparameters_range_dictionary["tversky_alpha"] = Real(0, 1)
-# hyperparameters_range_dictionary["tversky_beta"] = Real(0, 1)
+hyperparameters_range_dictionary["topK"] = Integer(5, 100)
+hyperparameters_range_dictionary["shrink"] = Integer(0, 500)
+hyperparameters_range_dictionary["feature_weighting"] = Categorical(["BM25", "none", "TF-IDF"])
+hyperparameters_range_dictionary["similarity"] = Categorical(["tversky", "cosine", "jaccard", "tanimoto"])
+hyperparameters_range_dictionary["normalize"] = Categorical([True, False])
+hyperparameters_range_dictionary["tversky_alpha"] = Real(0, 1)
+hyperparameters_range_dictionary["tversky_beta"] = Real(0, 1)
 
 # hyperparameters_range_dictionary = {}
 # hyperparameters_range_dictionary["topK"] = Integer(5, 2000)
@@ -78,12 +85,12 @@ hyperparameters_range_dictionary["reg"] = Real(0.00001, 0.01, prior='log-uniform
 
 # ucm_w = sps.load_npz('Data/ucm_weighted.npz')
 # ucm_age, ucm_region, ucm_all = Data.get_ucm()
-# _, _, _, icm_all = Data.get_icm()
+_, _, _, icm_all = Data.get_icm()
 recommender_input_args = SearchInputRecommenderArgs(
-    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train],
+    CONSTRUCTOR_POSITIONAL_ARGS=[urm_train, icm_all],
     CONSTRUCTOR_KEYWORD_ARGS={},
     FIT_POSITIONAL_ARGS=[],
-    FIT_KEYWORD_ARGS={'epochs': 100, **earlystopping_keywargs}
+    FIT_KEYWORD_ARGS={}
 )
 
 output_folder_path = "result_experiments/"
@@ -94,7 +101,7 @@ import os
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path)
 
-n_cases = 200
+n_cases = 500
 metric_to_optimize = "MAP"
 parameterSearch.search(recommender_input_args,
                        parameter_search_space = hyperparameters_range_dictionary,

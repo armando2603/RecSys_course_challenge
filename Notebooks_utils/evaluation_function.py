@@ -44,7 +44,7 @@ def MAP(is_relevant, relevant_items):
 
 
 
-def evaluate_algorithm(URM_test, recommender_object, at=5):
+def evaluate_algorithm(URM_test, recommender_object, at=10):
 
     cumulative_precision = 0.0
     cumulative_recall = 0.0
@@ -74,21 +74,16 @@ def evaluate_algorithm(URM_test, recommender_object, at=5):
 
             is_relevant = np.in1d(recommended_items, relevant_items, assume_unique=True)
 
-            cumulative_precision += precision(is_relevant, relevant_items)
-            cumulative_recall += recall(is_relevant, relevant_items)
+
             cumulative_MAP += MAP(is_relevant, relevant_items)
 
 
-    cumulative_precision /= num_eval
-    cumulative_recall /= num_eval
+
     cumulative_MAP /= num_eval
 
-    print("Recommender performance is: Precision = {:.4f}, Recall = {:.4f}, MAP = {:.4f}".format(
-        cumulative_precision, cumulative_recall, cumulative_MAP))
+    print("Recommender performance is:  MAP = {:.4f}".format(cumulative_MAP))
 
     result_dict = {
-        "precision": cumulative_precision,
-        "recall": cumulative_recall,
         "MAP": cumulative_MAP,
     }
 

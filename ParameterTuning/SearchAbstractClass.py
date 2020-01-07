@@ -138,7 +138,7 @@ class SearchAbstractClass(object):
                output_folder_path = None,
                output_file_name_root = None,
                parallelize = True,
-               save_model = "best",
+               save_model = 'no',
                evaluate_on_test_each_best_solution = True,
                save_metadata = True,
                ):

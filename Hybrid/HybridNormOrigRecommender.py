@@ -138,7 +138,7 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
             item_weights_4 = normalize(item_weights_4, norm='max', axis=1)
             item_weights_5 = normalize(item_weights_5, norm='max', axis=1)
             item_weights_6 = normalize(item_weights_6, norm='max', axis=1)
-            
+
         item_weights = item_weights_1 * self.alpha
         item_weights += item_weights_2 * self.beta
         item_weights += item_weights_3 * self.gamma

@@ -1,6 +1,7 @@
 from Base.Recommender_utils import check_matrix, similarityMatrixTopK
 from Base.BaseSimilarityMatrixRecommender import BaseItemSimilarityMatrixRecommender
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
+from KNN.ItemKNNCBFRecommender import ItemKNNCBFRecommender
 from SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from Base.NonPersonalizedRecommender import TopPop
@@ -16,6 +17,8 @@ import numpy as np
 from sklearn.preprocessing import normalize
 import scipy.sparse as sps
 from pathlib import Path
+from DataManager.DataManager import DataManager
+
 
 class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
     """ HybridNormOrigRecommender
@@ -31,16 +34,30 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
         self.eurm = eurm
         self.num_users = urm_train.shape[0]
 
+        data = DataManager()
+
         urm_train = check_matrix(urm_train.copy(), 'csr')
+        icm_price, icm_asset, icm_sub, icm_all = data.get_icm()
+        ucm_age, ucm_region, ucm_all = data.get_ucm()
 
-        recommender_1 = HybridGenRecommender(urm_train, eurm=self.eurm)
-        recommender_1.fit()
+        recommender_1 = ItemKNNCBFRecommender(urm_train, icm_all)
+        recommender_1.fit(shrink=40, topK=20, feature_weighting='BM25')
 
-        recommender_2 = ItemKNNCFRecommender(urm_train)
-        recommender_2.fit(shrink=30, topK=20)
+        recommender_7 = UserKNNCBFRecommender(urm_train, ucm_all)
+        recommender_7.fit(shrink=1777, topK=1998, similarity='tversky',
+                          feature_weighting='BM25',
+                          tversky_alpha=0.1604953616,
+                          tversky_beta=0.9862348646)
+
+        # recommender_1 = HybridGenRecommender(urm_train, eurm=self.eurm)
+        # recommender_1.fit()
 
         # recommender_2 = ItemKNNCFRecommender(urm_train)
-        # recommender_2.fit(topK=5, shrink=500, feature_weighting='BM25', similarity='tversky', normalize=False, tversky_alpha=0.0, tversky_beta=1.0)
+        # recommender_2.fit(shrink=30, topK=20)
+
+        recommender_2 = ItemKNNCFRecommender(urm_train)
+        recommender_2.fit(topK=5, shrink=500, feature_weighting='BM25', similarity='tversky', normalize=False,
+                          tversky_alpha=0.0, tversky_beta=1.0)
 
         recommender_3 = UserKNNCFRecommender(urm_train)
         recommender_3.fit(shrink=2, topK=600, normalize=True)
@@ -63,6 +80,7 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
         self.recommender_4 = recommender_4
         self.recommender_5 = recommender_5
         self.recommender_6 = recommender_6
+        self.recommender_7 = recommender_7
 
         if self.eurm:
 
@@ -87,7 +105,6 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
             self.score_matrix_5 = normalize(self.score_matrix_5, norm='max', axis=1)
             self.score_matrix_6 = normalize(self.score_matrix_6, norm='max', axis=1)
 
-
             # user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
             # user_score_matrix_3 = normalize(self.score_matrix_3.tocsc(), norm='max', axis=0)
             # user_score_matrix_4 = normalize(self.score_matrix_4.tocsc(), norm='max', axis=0)
@@ -102,9 +119,7 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
             # self.score_matrix_5 = item_score_matrix_5 * 0.6 + user_score_matrix_5.tocsr() * 0.4
             # self.score_matrix_6 = item_score_matrix_6 * 0.6 + user_score_matrix_6.tocsr() * 0.4
 
-
-
-    def fit(self, alpha=0.2, beta=0.8, gamma=0.012, phi=1.2, psi=0, li=0):
+    def fit(self, alpha=0.2, beta=0.8, gamma=0.012, phi=1.2, psi=0, li=0, mi=0):
         # alpha=0.2, beta=0.8, gamma=0.012, phi=1.2
         self.alpha = alpha
         self.beta = beta
@@ -112,7 +127,7 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
         self.phi = phi
         self.psi = psi
         self.li = li
-
+        self.mi = mi
 
     def _compute_item_score(self, user_id_array, items_to_compute=None):
 
@@ -131,6 +146,7 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
             item_weights_4 = self.recommender_4._compute_item_score(user_id_array)
             item_weights_5 = self.recommender_5._compute_item_score(user_id_array)
             item_weights_6 = self.recommender_6._compute_item_score(user_id_array)
+            item_weights_7 = self.recommender_7._compute_item_score(user_id_array)
 
             item_weights_1 = normalize(item_weights_1, norm='max', axis=1)
             item_weights_2 = normalize(item_weights_2, norm='max', axis=1)
@@ -138,6 +154,7 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
             item_weights_4 = normalize(item_weights_4, norm='max', axis=1)
             item_weights_5 = normalize(item_weights_5, norm='max', axis=1)
             item_weights_6 = normalize(item_weights_6, norm='max', axis=1)
+            item_weights_7 = normalize(item_weights_7, norm='max', axis=1)
 
         item_weights = item_weights_1 * self.alpha
         item_weights += item_weights_2 * self.beta
@@ -145,5 +162,6 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
         item_weights += item_weights_4 * self.phi
         item_weights += item_weights_5 * self.psi
         item_weights += item_weights_6 * self.li
+        item_weights += item_weights_7 * self.mi
 
         return item_weights

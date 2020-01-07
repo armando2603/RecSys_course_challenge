@@ -389,7 +389,7 @@ class DataManager(object):
 
         urm = self.get_urm()
 
-        tracks_df = pd.read_csv('Data/data_ICM_price.csv')
+        tracks_df = pd.read_csv(data_folder / 'Data/data_ICM_price.csv')
         prices = tracks_df['data'].values
 
         dur_idx = np.argsort(prices)[::-1]
@@ -426,7 +426,7 @@ class DataManager(object):
 
         urm = self.get_urm()
 
-        asset_df = pd.read_csv('Data/data_ICM_asset.csv')
+        asset_df = pd.read_csv(data_folder / 'Data/data_ICM_asset.csv')
         assets = asset_df['data'].values
 
         dur_idx = np.argsort(assets)[::-1]

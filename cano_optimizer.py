@@ -34,14 +34,14 @@ tuning_params = {
 #     print('Il Map del test è : {}'.format(result_test[10]['MAP']))
 #     return result_valid[10]['MAP']
 
-num_test = 2
+num_test = 1
 
 my_input = []
 
 for i in np.arange(num_test):
 
     urm_train, urm_test = split_train_leave_k_out_user_wise(data.get_urm(), temperature='normal')
-    urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid')
+    urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid2')
     recommender = HybridNormOrigRecommender(urm_train)
     my_input.append([urm_valid, recommender, urm_test])
 
@@ -59,12 +59,13 @@ def search_param(alpha, beta, gamma, phi, psi, li, mi):
 
         res.append(result_valid[10]['MAP'])
     print('Il max valid è il n: {}  con : {}'.format(vec['n_valid'], optimizer.max))
-    print('Il max test è il n : {} con test : {}').format(vec['n_test'], vec['max_valid'])
+    print('Il max test è il n : {} con test : {}'.format(vec['n_test'], vec['max_test']))
     res = np.array(res)
     print('Il Map corrente è : {}'.format(res.mean()))
 
-    if res.mean() > optimizer.max['target']:
+    if res.mean() > vec['max_valid']:
       vec['n_valid'] = vec['n']
+      vec['max_valid'] = res.mean()
       print('new max valid found')
       res_test = []
       for current in my_input:

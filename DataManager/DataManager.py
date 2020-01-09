@@ -452,3 +452,36 @@ class DataManager(object):
         icm = sps.csr_matrix((data, (rows, cols)), shape=(urm.shape[1], n_clusters))
 
         return icm
+
+    def create_test_warm_users(self, urm_test, threshold=1):
+
+        n_users, n_items = self.urm.shape
+
+        urm_train_builder = IncrementalSparseMatrix(auto_create_row_mapper=False, n_rows=n_users,
+                                                    auto_create_col_mapper=False, n_cols=n_items)
+
+        for user_id in range(n_users):
+            urm_start_user_position = self.urm.indptr[user_id]
+            urm_end_user_position = self.urm.indptr[user_id + 1]
+            urm_user_profile = self.urm.indices[urm_start_user_position:urm_end_user_position]
+
+            start_user_position = urm_test.indptr[user_id]
+            end_user_position = urm_test.indptr[user_id + 1]
+            user_profile = urm_test.indices[start_user_position:end_user_position]
+
+            if len(urm_user_profile) > threshold and len(user_profile) > 0:
+                user_interaction_items_train = user_profile
+                user_interaction_data_train = urm_test.data[start_user_position:end_user_position]
+
+                urm_train_builder.add_data_lists([user_id] * len(user_interaction_items_train),
+                                                 user_interaction_items_train, user_interaction_data_train)
+
+        warm_urm = urm_train_builder.get_SparseMatrix()
+        warm_urm = sps.csr_matrix(warm_urm)
+        user_no_item_train = np.sum(np.ediff1d(warm_urm.indptr) == 0)
+
+        if user_no_item_train != 0:
+            print("Warning: {} ({:.2f} %) of {} users have no Train items".format(user_no_item_train,
+                                                                                  user_no_item_train / n_users * 100,
+                                                                                  n_users))
+        return warm_urm

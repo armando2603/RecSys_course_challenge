@@ -63,9 +63,9 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
             else:
                 print("icm_sparse not found, create new one...")
                 self.score_matrix_1 = self.recommender_1._compute_item_matrix_score(np.arange(self.num_users))
-                item_score_matrix_1 = normalize(self.score_matrix_1, norm='max', axis=1)
-                user_score_matrix_1 = normalize(self.score_matrix_1.tocsc(), norm='max', axis=0)
-                self.score_matrix_1 = item_score_matrix_1 * 0.6 + user_score_matrix_1.tocsr() * 0.4
+                # item_score_matrix_1 = normalize(self.score_matrix_1, norm='max', axis=1)
+                # user_score_matrix_1 = normalize(self.score_matrix_1.tocsc(), norm='max', axis=0)
+                # self.score_matrix_1 = item_score_matrix_1 * 0.6 + user_score_matrix_1.tocsr() * 0.4
                 sps.save_npz(self.data_folder / 'Data/icm_sparse.npz', self.score_matrix_1)
 
             if Path(self.data_folder / 'Data/ucm_sparse.npz').is_file():
@@ -74,9 +74,9 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
             else:
                 print("ucm_sparse not found, create new one...")
                 self.score_matrix_2 = self.recommender_2._compute_item_matrix_score(np.arange(self.num_users))
-                item_score_matrix_2 = normalize(self.score_matrix_2, norm='max', axis=1)
-                user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
-                self.score_matrix_2 = item_score_matrix_2 * 0.6 + user_score_matrix_2.tocsr() * 0.4
+                # item_score_matrix_2 = normalize(self.score_matrix_2, norm='max', axis=1)
+                # user_score_matrix_2 = normalize(self.score_matrix_2.tocsc(), norm='max', axis=0)
+                # self.score_matrix_2 = item_score_matrix_2 * 0.6 + user_score_matrix_2.tocsr() * 0.4
                 sps.save_npz(self.data_folder / 'Data/ucm_sparse.npz', self.score_matrix_2)
 
 

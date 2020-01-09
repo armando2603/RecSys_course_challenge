@@ -66,7 +66,7 @@ class HybridNormOrigRecommender(BaseItemSimilarityMatrixRecommender):
         #                   tversky_alpha=1.0, tversky_beta=1.0)
 
         recommender_4 = RP3betaRecommender(urm_train)
-        recommender_4.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
+        recommender_4.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=False)
 
         recommender_5 = SLIM_BPR_Cython(urm_train)
         recommender_5.fit(lambda_i=0.0926694015, lambda_j=0.001697250, learning_rate=0.002391, epochs=65, topK=200)

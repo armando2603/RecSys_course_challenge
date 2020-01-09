@@ -41,13 +41,13 @@ from FeatureWeighting.User_CFW_D_Similarity_Linalg import  User_CFW_D_Similarity
 from Hybrid.HybridNorm3Recommender import HybridNorm3Recommender
 from MatrixFactorization.ALSRecommender import ALSRecommender
 from MatrixFactorization.BPRRecommender import BPRRecommender
-test = True
+import similaripy as sim
+test = False
 threshold = 1
 temperature = 'normal'
 Data = DataManager()
 urm_train = Data.get_urm()
-valid = True
-
+valid = False
 multiple_test = False
 num_test = 3
 
@@ -249,8 +249,14 @@ else:
         # recommender = IALSRecommender(urm_train)
         # recommender.fit(**args)
 
-        recommender = HybridGenRecommender(urm_train)
-        recommender.fit()
+        # recommender = HybridGenRecommender(urm_train, eurm=True)
+        # recommender.fit()
+
+        # recommender = ItemKNNCBFRecommender(urm_train, icm_all)
+        # recommender.fit(shrink=40, topK=20, feature_weighting='BM25')
+
+        recommender = RP3betaRecommender(urm_train)
+        recommender.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
 
     normal_recommender = recommender
 
@@ -292,4 +298,4 @@ else:
             recommended_list.append(items_strings)
 
         submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-        submission.to_csv(data_folder / 'Data/Submissions/5_1_1_submission.csv', index=False)
+        submission.to_csv(data_folder / 'Data/Submissions/9_1_1_submission.csv', index=False)

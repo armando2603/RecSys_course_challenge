@@ -128,6 +128,6 @@ class HybridNorm2Recommender(BaseItemSimilarityMatrixRecommender):
         item_weights += item_weights_4 * self.phi
         item_weights += item_weights_5 * self.psi
         item_weights += item_weights_6 * self.li
-        item_weights += item_weights_7 * self.mi
+
 
         return item_weights

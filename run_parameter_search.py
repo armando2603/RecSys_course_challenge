@@ -26,27 +26,27 @@ from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactoriz
 from MatrixFactorization.Cython.MatrixFactorization_Cython import MatrixFactorization_FunkSVD_Cython
 from Hybrid.HybridNormRecommender import HybridNormRecommender
 from GraphBased.RP3betaRecommender import RP3betaRecommender
+from SLIM_ElasticNet.SLIMElasticNetRecommender2 import MultiThreadSLIM_ElasticNet
 Data = DataManager()
-
-
 urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), threshold=10, temperature='normal')
-urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10, temperature='valid2')
+urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=10, temperature='valid')
+urm_valid = Data.create_test_warm_users(urm_valid, threshold=3)
 evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
 evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-recommender = RP3betaRecommender
+recommender = MultiThreadSLIM_ElasticNet
 # recommender = MatrixFactorization_FunkSVD_Cython
 # recommender = MatrixFactorization_AsySVD_Cython
 # recommender = MatrixFactorization_BPR_Cython
 
-recommender_1 = RP3betaRecommender(urm_train)
-recommender_1.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
-
-result, str_result = evaluator_valid.evaluateRecommender(recommender_1)
-print('Il valid iniziale è : {}'.format(result[10]['MAP']))
-
-result, str_result = evaluator_test.evaluateRecommender(recommender_1)
-print('Il test iniziale è : {}'.format(result[10]['MAP']))
+# recommender_1 = RP3betaRecommender(urm_train)
+# recommender_1.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
+#
+# result, str_result = evaluator_valid.evaluateRecommender(recommender_1)
+# print('Il valid iniziale è : {}'.format(result[10]['MAP']))
+#
+# result, str_result = evaluator_test.evaluateRecommender(recommender_1)
+# print('Il test iniziale è : {}'.format(result[10]['MAP']))
 
 parameterSearch = SearchBayesianSkopt(recommender,
                                  evaluator_validation=evaluator_valid,
@@ -88,10 +88,9 @@ parameterSearch = SearchBayesianSkopt(recommender,
 # hyperparameters_range_dictionary["normalize_similarity"] = Categorical([True, False])
 
 hyperparameters_range_dictionary = {}
-hyperparameters_range_dictionary["topK"] = Integer(5, 1000)
-hyperparameters_range_dictionary["alpha"] = Real(low = 0, high = 2, prior = 'uniform')
-hyperparameters_range_dictionary["beta"] = Real(low = 0, high = 2, prior = 'uniform')
-hyperparameters_range_dictionary["normalize_similarity"] = Categorical([True, False])
+hyperparameters_range_dictionary["topK"] = Integer(5, 200)
+hyperparameters_range_dictionary["l1_ratio"] = Real(low = 1e-5, high = 1.0, prior = 'log-uniform')
+hyperparameters_range_dictionary["alpha"] = Real(low = 1e-3, high = 1.0, prior = 'uniform')
 
 
 # ucm_w = sps.load_npz('Data/ucm_weighted.npz')
@@ -112,12 +111,12 @@ import os
 if not os.path.exists(output_folder_path):
     os.makedirs(output_folder_path)
 
-n_cases = 500
+n_cases = 100
 metric_to_optimize = "MAP"
 parameterSearch.search(recommender_input_args,
                        parameter_search_space = hyperparameters_range_dictionary,
                        n_cases = n_cases,
-                       n_random_starts = 40,
+                       n_random_starts = 10,
                        output_folder_path = output_folder_path,
                        output_file_name_root = recommender.RECOMMENDER_NAME,
                        metric_to_optimize = metric_to_optimize

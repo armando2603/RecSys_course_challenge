@@ -485,3 +485,56 @@ class DataManager(object):
                                                                                   user_no_item_train / n_users * 100,
                                                                                   n_users))
         return warm_urm
+
+    def clusterize_icm(self, icm, n_clusters=1000):
+
+        # Clusterizing means aggregating features with OR
+        print("ICM shape is {}, using {} clusters".format(icm.shape, n_clusters))
+
+        n_features = icm.shape[1]
+
+        cluster_allocation = np.random.randint(0, n_clusters, n_features)
+
+        # Use array as it requires MUCH less space than lists
+        dataBlock = 10000000
+
+        clustered_icm_data = np.zeros(dataBlock, dtype=np.float64)
+        clustered_icm_row = np.zeros(dataBlock, dtype=np.int32)
+        clustered_icm_col = np.zeros(dataBlock, dtype=np.int32)
+
+        numCells = 0
+
+        for cluster_index in range(n_clusters):
+
+            cluster_allocation_mask = cluster_allocation == cluster_index
+
+            new_feature_column = icm[:, cluster_allocation_mask].sum(axis=1)
+            new_feature_column = np.array(new_feature_column).ravel()
+
+            nonzero_items = new_feature_column.nonzero()[0]
+
+            # clustered_icm_row.extend(nonzero_items.tolist())
+            # clustered_icm_col.extend([cluster_index]*len(nonzero_items))
+            # clustered_icm_data.extend(new_feature_column[nonzero_items])
+
+            for el_index in range(len(nonzero_items)):
+                if numCells == len(clustered_icm_row):
+                    clustered_icm_row = np.concatenate((clustered_icm_row, np.zeros(dataBlock, dtype=np.int32)))
+                    clustered_icm_col = np.concatenate((clustered_icm_col, np.zeros(dataBlock, dtype=np.int32)))
+                    clustered_icm_data = np.concatenate((clustered_icm_data, np.zeros(dataBlock, dtype=np.float64)))
+
+                clustered_icm_row[numCells] = nonzero_items[el_index]
+                clustered_icm_col[numCells] = cluster_index
+                clustered_icm_data[numCells] = new_feature_column[nonzero_items[el_index]]
+
+                numCells += 1
+
+        new_shape = (icm.shape[0], n_clusters)
+
+        clustered_icm = sps.csr_matrix((clustered_icm_data, (clustered_icm_row, clustered_icm_col)), shape=new_shape)
+
+        print("Clustering done!")
+
+        return clustered_icm, cluster_allocation
+
+

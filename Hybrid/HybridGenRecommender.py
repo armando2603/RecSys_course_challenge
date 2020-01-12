@@ -39,14 +39,20 @@ class HybridGenRecommender(BaseItemSimilarityMatrixRecommender):
         recommender_1 = ItemKNNCBFRecommender(urm_train, icm_all)
         recommender_1.fit(shrink=40, topK=20, feature_weighting='BM25')
 
+        # recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
+        # recommender_2.fit(shrink=500, topK=1600, normalize=True)
+
         recommender_2 = UserKNNCBFRecommender(urm_train, ucm_all)
-        recommender_2.fit(shrink=500, topK=1600, normalize=True)
+        recommender_2.fit(shrink=1777, topK=1998, similarity='tversky',
+                          feature_weighting='BM25',
+                          tversky_alpha=0.1604953616,
+                          tversky_beta=0.9862348646)
 
         self.recommender_1 = recommender_1
         self.recommender_2 = recommender_2
         # self.recommender_3 = recommender_3
 
-    def fit(self, alpha=0.2, beta=0.03, gamma=0):
+    def fit(self, alpha=0.09, beta=0.03, gamma=0):
         # original 0.2
         self.alpha = alpha
         # self.beta = beta

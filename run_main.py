@@ -48,7 +48,7 @@ temperature = 'normal'
 Data = DataManager()
 urm_train = Data.get_urm()
 valid = False
-multiple_test = False
+multiple_test = True
 num_test = 3
 
 if multiple_test:
@@ -69,15 +69,19 @@ if multiple_test:
     # print(res)
     # print('Il MAP del test è : {}'.format(res.mean()))
 
+    _, _, ucm_all = Data.get_ucm()
+    # ucm_all, _ = Data.clusterize_icm(ucm_all, n_clusters=200)
 
     def single_test(urm_train, urm_test, urm_valid):
         evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10])
         evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-        args = {'beta': 0.016939501430845775, 'gamma': 0.00702678562222381, 'phi': 0.997241675965791, 'psi': 0.6651015790183177, 'alpha': 0.09107125274223805, 'li': 0.09111158764920892}
-        recommender = HybridNormRecommender(urm_train)
-        recommender.fit(**args)
 
+        recommender = UserKNNCBFRecommender(urm_train, ucm_all)
+        recommender.fit(shrink=1777, topK=1998, similarity='tversky',
+                          feature_weighting='BM25',
+                          tversky_alpha=0.1604953616,
+                          tversky_beta=0.9862348646)
 
         result, str_result = evaluator_test.evaluateRecommender(recommender)
         # result, str_result = evaluator_valid.evaluateRecommender(recommender)
@@ -90,6 +94,8 @@ if multiple_test:
 
         urm_train, urm_test = split_train_leave_k_out_user_wise(Data.get_urm(), threshold=threshold, temperature=temperature)
         urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, threshold=threshold, temperature='valid')
+        # urm_test = Data.create_test_warm_users(urm_test, threshold=6)
+        # urm_valid = Data.create_test_warm_users(urm_valid, threshold=6)
         my_input.append([urm_train, urm_test, urm_valid])
 
     from multiprocessing import Pool
@@ -199,9 +205,9 @@ else:
         warm_recommender= cold_recommender
 
     if temperature == 'normal' or test is False:
-        icm_weighted = sp.load_npz(data_folder / 'Data/icm_weighted.npz')
-        ucm_age, ucm_region, ucm_all = Data.get_ucm()
-        icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
+        # icm_weighted = sp.load_npz(data_folder / 'Data/icm_weighted.npz')
+        # ucm_age, ucm_region, ucm_all = Data.get_ucm()
+        # icm_price, icm_asset, icm_sub, icm_all = Data.get_icm()
 
         # x_tick = np.arange(start=0, stop=1.001, step=0.02)
         # print(len(x_tick))
@@ -255,8 +261,9 @@ else:
         # recommender = ItemKNNCBFRecommender(urm_train, icm_all)
         # recommender.fit(shrink=40, topK=20, feature_weighting='BM25')
 
-        recommender = RP3betaRecommender(urm_train)
-        recommender.fit(topK=16, alpha=0.03374950051351756, beta=0.24087176329409027, normalize_similarity=True)
+
+        recommender = HybridNorm3Recommender(urm_train)
+        recommender.fit()
 
     normal_recommender = recommender
 
@@ -290,12 +297,12 @@ else:
 
         recommended_list = []
         for user in tqdm(users):
-            # if Data.get_cold_users(0)[user]:
-            #     recommended_items = zero_recommender.recommend(user, 10)
-            # else:
-            recommended_items = normal_recommender.recommend(user, 10)
+            if Data.get_cold_users(0)[user]:
+                recommended_items = zero_recommender.recommend(user, 10)
+            else:
+                recommended_items = normal_recommender.recommend(user, 10)
             items_strings = ' '.join([str(i) for i in recommended_items])
             recommended_list.append(items_strings)
 
         submission = pd.DataFrame(list(zip(users, recommended_list)), columns=['user_id', 'item_list'])
-        submission.to_csv(data_folder / 'Data/Submissions/9_1_1_submission.csv', index=False)
+        submission.to_csv(data_folder / 'Data/Submissions/12_1_1_submission.csv', index=False)

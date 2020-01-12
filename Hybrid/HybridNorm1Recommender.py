@@ -108,13 +108,13 @@ class HybridNorm1Recommender(BaseItemSimilarityMatrixRecommender):
             item_weights_3 = self.recommender_3._compute_item_score(user_id_array)
             item_weights_4 = self.recommender_4._compute_item_score(user_id_array)
             item_weights_5 = self.recommender_5._compute_item_score(user_id_array)
-            item_weights_6 = self.recommender_5._compute_item_score(user_id_array)
+            item_weights_6 = self.recommender_6._compute_item_score(user_id_array)
 
         item_weights = item_weights_1 * self.alpha
         item_weights += item_weights_2 * self.beta
         item_weights += item_weights_3 * self.gamma
         item_weights += item_weights_4 * self.phi
         item_weights += item_weights_5 * self.psi
-        item_weights += item_weights_5 * self.li
+        item_weights += item_weights_6 * self.li
 
         return item_weights

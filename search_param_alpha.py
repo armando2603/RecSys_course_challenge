@@ -35,18 +35,18 @@ data_folder = Path(__file__).parent.absolute()
 from FeatureWeighting.User_CFW_D_Similarity_Linalg import  User_CFW_D_Similarity_Linalg
 from Hybrid.HybridNorm3Recommender import HybridNorm3Recommender
 
-num_test = 3
-x_tick = np.arange(start=0, stop=1.001, step=0.25)
+num_test = 4
+x_tick = np.arange(start=0, stop=0.010001, step=0.001)
 
 def single_test(urm_train, urm_test, urm_valid, x_tick):
     evaluator_valid = EvaluatorHoldout(urm_valid, cutoff_list=[10], verbose=False)
 
     MAP_per_k_valid = []
 
-    recommender = HybridNorm2Recommender(urm_train)
+    recommender = HybridNorm3Recommender(urm_train)
 
     for alpha in tqdm(x_tick):
-        recommender.fit(alpha=alpha)
+        recommender.fit(beta=alpha)
 
         result_dict, res_str = evaluator_valid.evaluateRecommender(recommender)
         MAP_per_k_valid.append(result_dict[10]["MAP"])
@@ -61,7 +61,9 @@ my_input = []
 for i in np.arange(num_test):
 
     urm_train, urm_test = split_train_leave_k_out_user_wise(data.get_urm(), temperature='normal')
-    urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid2')
+    urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid')
+    # urm_test = data.create_test_warm_users(urm_test, threshold=5)
+    urm_valid = data.create_test_warm_users(urm_valid, threshold=3)
     my_input.append([urm_train, urm_test, urm_valid, x_tick])
 
 from multiprocessing import Pool
@@ -91,22 +93,14 @@ pyplot.savefig('newfig')
 
 print('The best alpha is : {}'.format(best_alpha))
 
-def single_test(urm_train, urm_test, urm_valid):
+def single_test(urm_train, urm_test, urm_valid, x_tick):
     evaluator_test = EvaluatorHoldout(urm_test, cutoff_list=[10])
 
-    recommender = HybridNorm2Recommender(urm_train)
-    recommender.fit(alpha=best_alpha)
+    recommender = HybridNorm3Recommender(urm_train)
+    recommender.fit(beta=best_alpha)
 
     result, str_result = evaluator_test.evaluateRecommender(recommender)
     return result[10]['MAP']
-
-my_input = []
-
-for i in np.arange(num_test):
-    urm_train, urm_test = split_train_leave_k_out_user_wise(data.get_urm(),
-                                                            temperature='normal')
-    urm_train, urm_valid = split_train_leave_k_out_user_wise(urm_train, temperature='valid2')
-    my_input.append([urm_train, urm_test, urm_valid])
 
 pool = Pool(num_test)
 res = pool.starmap(single_test, my_input)
